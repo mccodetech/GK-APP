@@ -10,11 +10,9 @@
         .menu-btn { width: 100%; padding: 14px; background-color: #00796b; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; text-align: left; margin-bottom: 10px; font-weight: bold; }
         .menu-btn:hover { background-color: #004d40; }
         .user-profile { background: #e0f2f1; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        
         .timer-container { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
         .circular-timer { position: relative; width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(#00796b 360deg, #e0e0e0 0deg); display: flex; justify-content: center; align-items: center; }
         .circular-timer span { position: absolute; font-size: 14px; font-weight: bold; color: #333; background: white; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-
         .q-progress-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 15px; }
         .q-dot { width: 25px; height: 8px; background: #e0e0e0; border-radius: 4px; }
         .q-dot.correct { background: #4caf50; }
@@ -23,8 +21,6 @@
 </head>
 <body>
     <div class="container" style="max-width: 650px;">
-        
-        <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ -->
         <div class="user-profile">
             <div>
                 <span id="user-icon" style="font-size: 22px;">⭐</span>
@@ -33,7 +29,6 @@
             <div id="user-score-display" style="font-weight: bold; color: #333;">സ്കോർ: 0</div>
         </div>
 
-        <!-- 1. പ്രധാന കാറ്റഗറി മെനു (മദ്രസ, സ്കൂൾ, GK) -->
         <div id="main-category-section">
             <h3>വിഭാഗങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
             <button class="menu-btn" onclick="selectCategory('madrasa')">📖 മദ്രസ പഠനങ്ങൾ</button>
@@ -41,7 +36,6 @@
             <button class="menu-btn" onclick="selectCategory('gk')">🌍 GK & കറന്റ് അഫയേഴ്സ്</button>
         </div>
 
-        <!-- 2. സബ് സെക്ഷൻ (ക്ലാസുകൾ അല്ലെങ്കിൽ വിഷയങ്ങൾ) -->
         <div id="sub-category-section" style="display: none;">
             <h3 id="sub-title"></h3>
             <div id="sub-items-container" style="max-height: 250px; overflow-y: auto;"></div>
@@ -49,7 +43,6 @@
             <button onclick="goBackToMain()" class="small-btn" style="background-color: #757575 !important;">പിന്നോട്ട് (Back)</button>
         </div>
 
-        <!-- 3. പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശം -->
         <div id="intro-box" style="display: none; text-align: center;">
             <h3 id="intro-title">ക്വിസ്</h3>
             <p>ഈ സെക്ഷനിലെ 10 ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ വിജയിക്കൂ!</p>
@@ -58,20 +51,14 @@
             <button onclick="location.reload()" class="small-btn" style="background-color: #757575 !important;">തിരികെ പോവുക</button>
         </div>
 
-        <!-- 4. ക്വിസ് സെക്ഷൻ -->
         <div id="quiz-box" style="display: none; text-align: left;">
             <div class="q-progress-bar" id="q-dots-container"></div>
-
             <div class="timer-container">
-                <div class="circular-timer" id="timer-circle">
-                    <span id="timer-text">20</span>
-                </div>
+                <div class="circular-timer" id="timer-circle"><span id="timer-text">20</span></div>
             </div>
-
             <h3 id="question-title">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
             <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
-
         <button onclick="logout()" class="small-btn">പുറത്തുപോവുക (Logout)</button>
     </div>
 
@@ -88,9 +75,7 @@
             measurementId: "G-50X2DDE274"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         const userName = localStorage.getItem('userName');
@@ -100,9 +85,8 @@
         let userScore = 0;
         let activeQuestions = [];
 
-        if (!userPhone) {
-            window.location.href = "index.html";
-        } else {
+        if (!userPhone) window.location.href = "index.html";
+        else {
             document.getElementById('user-icon').innerText = userIcon;
             fetchUserData();
         }
@@ -110,15 +94,13 @@
         function fetchUserData() {
             db.collection('users').where('phone', '==', userPhone).get().then(snapshot => {
                 snapshot.forEach(doc => {
-                    let data = doc.data();
-                    userScore = data.score || 0;
-                    document.getElementById('welcome-user').innerText = data.name;
+                    userScore = doc.data().score || 0;
+                    document.getElementById('welcome-user').innerText = doc.data().name;
                     document.getElementById('user-score-display').innerText = `സ്കോർ: ${userScore}`;
                 });
             });
         }
 
-        // കാറ്റഗറി സെലക്ഷൻ ലോജിക്
         function selectCategory(category) {
             document.getElementById('main-category-section').style.display = 'none';
             const subSection = document.getElementById('sub-category-section');
@@ -127,22 +109,14 @@
             container.innerHTML = '';
             subSection.style.display = 'block';
 
-            if (category === 'madrasa') {
-                subTitle.innerText = "മദ്രസ ക്ലാസുകൾ തിരഞ്ഞെടുക്കുക";
+            if (category === 'madrasa' || category === 'school') {
+                let catName = category === 'madrasa' ? 'മദ്രസ' : 'സ്കൂൾ';
+                subTitle.innerText = `${catName} ക്ലാസുകൾ തിരഞ്ഞെടുക്കുക`;
                 for (let i = 1; i <= 10; i++) {
                     let btn = document.createElement('button');
                     btn.className = 'menu-btn';
-                    btn.innerText = `ക്ലാസ്സ് ${i} (മദ്രസ)`;
-                    btn.onclick = () => showSubjects('മദ്രസ - ക്ലാസ്സ് ' + i);
-                    container.appendChild(btn);
-                }
-            } else if (category === 'school') {
-                subTitle.innerText = "സ്കൂൾ ക്ലാസുകൾ തിരഞ്ഞെടുക്കുക";
-                for (let i = 1; i <= 10; i++) {
-                    let btn = document.createElement('button');
-                    btn.className = 'menu-btn';
-                    btn.innerText = `ക്ലാസ്സ് ${i} (സ്കൂൾ)`;
-                    btn.onclick = () => showSubjects('സ്കൂൾ - ക്ലാസ്സ് ' + i);
+                    btn.innerText = `ക്ലാസ്സ് ${i} (${catName})`;
+                    btn.onclick = () => showSubjects(category, i);
                     container.appendChild(btn);
                 }
             } else if (category === 'gk') {
@@ -157,18 +131,30 @@
             }
         }
 
-        function showSubjects(className) {
+        // അഡ്മിൻ സെറ്റ് ചെയ്ത വിഷയങ്ങൾ ഡാറ്റാബേസിൽ നിന്നും എടുക്കുന്നു
+        function showSubjects(category, classNum) {
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
-            subTitle.innerText = `${className} - വിഷയം തിരഞ്ഞെടുക്കുക`;
-            container.innerHTML = '';
+            let catName = category === 'madrasa' ? 'മദ്രസ' : 'സ്കൂൾ';
+            
+            subTitle.innerText = `${catName} - ക്ലാസ്സ് ${classNum} - വിഷയം തിരഞ്ഞെടുക്കുക`;
+            container.innerHTML = '<p style="color:#00796b;">ലോഡ് ചെയ്യുന്നു...</p>';
 
-            ['വിഷയം 1 (Basics)', 'വിഷയം 2 (Advanced)'].forEach(subj => {
-                let btn = document.createElement('button');
-                btn.className = 'menu-btn';
-                btn.innerText = subj;
-                btn.onclick = () => prepareQuiz(`${className} - ${subj}`);
-                container.appendChild(btn);
+            db.collection('settings').doc(category + '_class_' + classNum).get().then(doc => {
+                container.innerHTML = '';
+                if (doc.exists && doc.data().subjects && doc.data().subjects.length > 0) {
+                    doc.data().subjects.forEach(subj => {
+                        let btn = document.createElement('button');
+                        btn.className = 'menu-btn';
+                        btn.innerText = subj;
+                        btn.onclick = () => prepareQuiz(`${catName} - ക്ലാസ്സ് ${classNum} - ${subj}`);
+                        container.appendChild(btn);
+                    });
+                } else {
+                    container.innerHTML = '<p style="color:red; font-weight:bold;">ഈ ക്ലാസിലേക്ക് അഡ്മിൻ ഇതുവരെ വിഷയങ്ങൾ നൽകിയിട്ടില്ല!</p>';
+                }
+            }).catch(error => {
+                container.innerHTML = '<p style="color:red;">എറർ സംഭവിച്ചു.</p>';
             });
         }
 
@@ -177,18 +163,12 @@
             document.getElementById('main-category-section').style.display = 'block';
         }
 
-        // മാതൃകാ ചോദ്യ ബാങ്ക് (യഥാർത്ഥത്തിൽ ഇത് ഫയർബേസിൽ നിന്നോ ഷീറ്റിൽ നിന്നോ വരും)
+        // ബാക്കി ക്വിസ് ലോജിക്കുകൾ നേരത്തെ നൽകിയത് പോലെ തന്നെ...
         const masterQuestions = [
             { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answerText: "5" },
             { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answerText: "114" },
             { q: "ആദ്യത്തെ നബി ആര്?", options: ["ഇബ്രാഹിം നബി (അ)", "ആദം നബി (അ)", "മൂസാ നബി (അ)", "മുഹമ്മദ് നബി (സ)"], answerText: "ആദം നബി (അ)" },
-            { q: "വിശുദ്ധ ഖുർആൻ അവതരിച്ച മാസം?", options: ["റമദാൻ", "മുഹറം", "റബിഉൽ അവ്വൽ", "ശവ്വാൽ"], answerText: "റമദാൻ" },
-            { q: "ഇസ്ലാമിക കലണ്ടറിലെ ആദ്യ മാസം?", options: ["സഫർ", "റമദാൻ", "മുഹറം", "റെജബ്"], answerText: "മുഹറം" },
-            { q: "നമ്മുടെ രാജ്യമായ ഇന്ത്യയുടെ തലസ്ഥാനം?", options: ["മുംബൈ", "കൊൽക്കത്ത", "ഡെൽഹി", "ചെന്നൈ"], answerText: "ഡെൽഹി" },
-            { q: "കേരളത്തിന്റെ തലസ്ഥാനം ഏത്?", options: ["കോഴിക്കോട്", "തിരുവനന്തപുരം", "കൊച്ചി", "തൃശ്ശൂർ"], answerText: "തിരുവനന്തപുരം" },
-            { q: "ലോകത്തിലെ ഏറ്റവും വലിയ മഹാസമുദ്രം?", options: ["അറ്റ്‌ലാന്റിക്", "ഇന്ത്യൻ മഹാസമുദ്രം", "ആർട്ടിക്", "ശാന്ത സമുദ്രം (Pacific)"], answerText: "ശാന്ത സമുദ്രം (Pacific)" },
-            { q: "സൂര്യൻ ഉദിക്കുന്നത് ഏത് ദിക്കിലാണ്?", options: ["പടിഞ്ഞാറ്", "കിഴക്ക്", "വടക്ക്", "തെക്ക്"], answerText: "കിഴക്ക്" },
-            { q: "കമ്പ്യൂട്ടറിന്റെ പിതാവ് ആര്?", options: ["ചാൾസ് ബാബേജ്", "ആൽബർട്ട് ഐൻസ്റ്റീൻ", "തോമസ് ആൽവ എഡിസൺ", "ഐസക് ന്യൂട്ടൺ"], answerText: "ചാൾസ് ബാബേജ്" }
+            { q: "വിശുദ്ധ ഖുർആൻ അവതരിച്ച മാസം?", options: ["റമദാൻ", "മുഹറം", "റബിഉൽ അവ്വൽ", "ശവ്വാൽ"], answerText: "റമദാൻ" }
         ];
 
         function shuffleArray(array) {
@@ -205,8 +185,6 @@
             document.getElementById('sub-category-section').style.display = 'none';
             document.getElementById('intro-box').style.display = 'block';
             document.getElementById('intro-title').innerText = title;
-            
-            // ചോദ്യങ്ങളും ഓപ്ഷനുകളും പൂർണ്ണമായി ഷഫിൾ ചെയ്യുന്നു (Random Shuffle)
             activeQuestions = shuffleArray([...masterQuestions]);
         }
 
@@ -216,34 +194,31 @@
         function setupDots() {
             const dotsContainer = document.getElementById('q-dots-container');
             dotsContainer.innerHTML = '';
-            for(let i=0; i<10; i++) {
+            for(let i=0; i< (activeQuestions.length > 10 ? 10 : activeQuestions.length); i++) {
                 let dot = document.createElement('div');
-                dot.className = `q-dot ${questionStatuses[i]}`;
+                dot.className = `q-dot ${questionStatuses[i] || ''}`;
                 dotsContainer.appendChild(dot);
             }
         }
 
         function startActualQuiz() {
             document.getElementById('intro-box').style.display = 'none';
-            const quizBox = document.getElementById('quiz-box');
-            quizBox.style.display = 'block';
+            document.getElementById('quiz-box').style.display = 'block';
 
             let currentQIndex = 0;
             let correctAnswersCount = 0;
-            questionStatuses = Array(10).fill('');
+            let maxQuestions = activeQuestions.length > 10 ? 10 : activeQuestions.length; 
+            questionStatuses = Array(maxQuestions).fill('');
 
             function showQuestion() {
-                if (currentQIndex < activeQuestions.length) {
+                if (currentQIndex < maxQuestions) {
                     setupDots();
                     let qData = activeQuestions[currentQIndex];
-                    document.getElementById('question-title').innerText = `ചോദ്യം ${currentQIndex + 1}/10: ${qData.q}`;
-                    
+                    document.getElementById('question-title').innerText = `ചോദ്യം ${currentQIndex + 1}/${maxQuestions}: ${qData.q}`;
                     let optContainer = document.getElementById('options-container');
                     optContainer.innerHTML = '';
 
-                    // ഓപ്ഷനുകൾ ഷഫിൾ ചെയ്യുന്നു
                     let shuffledOptions = shuffleArray([...qData.options]);
-
                     let timeLeft = 20;
                     document.getElementById('timer-text').innerText = timeLeft;
                     updateTimerCircle(timeLeft, 20);
@@ -265,7 +240,8 @@
                     shuffledOptions.forEach((opt) => {
                         let optBtn = document.createElement('button');
                         optBtn.innerText = opt;
-                        optBtn.style.backgroundColor = "#00897b";
+                        optBtn.className = 'menu-btn';
+                        optBtn.style.marginBottom = "5px";
                         optBtn.onclick = () => {
                             clearInterval(timerInterval);
                             if (opt === qData.answerText) {
@@ -282,7 +258,7 @@
                 } else {
                     clearInterval(timerInterval);
                     setupDots();
-                    evaluateResult(correctAnswersCount, activeQuestions.length);
+                    evaluateResult(correctAnswersCount, maxQuestions);
                 }
             }
             showQuestion();
@@ -290,38 +266,29 @@
 
         function updateTimerCircle(current, total) {
             let degree = (current / total) * 360;
-            let circle = document.getElementById('timer-circle');
-            circle.style.background = `conic-gradient(#00796b ${degree}deg, #e0e0e0 0deg)`;
+            document.getElementById('timer-circle').style.background = `conic-gradient(#00796b ${degree}deg, #e0e0e0 0deg)`;
         }
 
         function evaluateResult(scoreCount, total) {
             let percentage = (scoreCount / total) * 100;
             const quizBox = document.getElementById('quiz-box');
 
-            // 100% മാർക്ക് (10/10) നേടിയാൽ മാത്രമേ വിജയം ലഭിക്കൂ
             if (scoreCount === total) {
                 quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ വിജയിച്ചു!</h3>
                                     <p>സ്കോർ: ${scoreCount}/${total} (100%)</p>
-                                    <button onclick="location.reload()" style="background:#00796b; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">മറ്റ് വിഭാഗങ്ങളിലേക്ക് പോവുക</button>`;
+                                    <button onclick="location.reload()" style="background:#00796b; padding:10px; color:white; border:none; border-radius:5px;">മറ്റ് വിഭാഗങ്ങളിലേക്ക് പോവുക</button>`;
                 updateScoreToDatabase(scoreCount * 5);
             } else {
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
-                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. വിജയിക്കാൻ 100% (എല്ലാ ചോദ്യങ്ങളും) ശരിയായിരിക്കണം.</p>
-                                    <button onclick="location.reload()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
+                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. വിജയിക്കാൻ 100% ശരിയായിരിക്കണം.</p>
+                                    <button onclick="location.reload()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
             }
-        }
-
-        async function updateScoreAndLevel(addedScore, newLevel) {
-            // നിലനിർത്തിയിരിക്കുന്നു
         }
 
         async function updateScoreToDatabase(addedScore) {
             const snapshot = await db.collection('users').where('phone', '==', userPhone).get();
             snapshot.forEach(doc => {
-                let currentTotal = doc.data().score || 0;
-                db.collection('users').doc(doc.id).update({
-                    score: currentTotal + addedScore
-                });
+                db.collection('users').doc(doc.id).update({ score: (doc.data().score || 0) + addedScore });
             });
         }
 
