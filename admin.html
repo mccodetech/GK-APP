@@ -10,20 +10,18 @@
     <div class="container" style="max-width: 600px;">
         <h2>അഡ്മിൻ പാനൽ</h2>
         
-        <!-- അഡ്മിൻ ലോഗിൻ ഫോം -->
         <div id="admin-login-box">
             <input type="text" id="admin-user" placeholder="അഡ്മിൻ യൂസർനെയിം (admin)">
             <input type="password" id="admin-pass" placeholder="പാസ്‌വേർഡ് (admin123)">
             <button onclick="loginAdmin()">അഡ്മിൻ ലോഗിൻ</button>
         </div>
 
-        <!-- അപ്പ്രൂവൽ ഡാഷ്‌ബോർഡ് (തുടക്കത്തിൽ മറച്ചുവെച്ചിരിക്കുന്നു) -->
         <div id="admin-dashboard" style="display: none; text-align: left;">
             <h3>പെൻഡിങ് അക്കൗണ്ടുകൾ (Pending Approvals)</h3>
             <ul id="pending-list" style="list-style: none; padding: 0;"></ul>
             
             <h3 style="margin-top: 30px;">Google Sheet വഴി ഡാറ്റ ചേർക്കാൻ</h3>
-            <p style="font-size: 14px; color: #555;">Google Sheet ലിങ്ക് നൽകി ഡാറ്റ ഇമ്പോർട്ട് ചെയ്യാം:</p>
+            <p style="font-size: 14px; color: #555;">താഴെ പറയുന്ന മാതൃകയിലുള്ള Google Sheet ലിങ്ക് നൽകുക:</p>
             <input type="text" id="sheet-link" placeholder="Google Sheet CSV Link ഇവിടെ നൽകുക">
             <button onclick="importFromSheet()" style="background-color: #0288d1;">ഡാറ്റ ഇമ്പോർട്ട് ചെയ്യുക</button>
         </div>
@@ -55,15 +53,16 @@
             if (user === "admin" && pass === "admin123") {
                 document.getElementById('admin-login-box').style.display = 'none';
                 document.getElementById('admin-dashboard').style.display = 'block';
-                loadPendingUsers();
+                loadPendingUsersLive(); // തത്സമയം ലോഡ് ചെയ്യാൻ
             } else {
                 alert("തെറ്റായ യൂസർനെയിം അല്ലെങ്കിൽ പാസ്‌വേർഡ്!");
             }
         }
 
-        function loadPendingUsers() {
+        // തത്സമയം (Real-time) പെൻഡിങ് യൂസർമാരെ കാണിക്കാൻ onSnapshot ഉപയോഗിക്കുന്നു
+        function loadPendingUsersLive() {
             const list = document.getElementById('pending-list');
-            db.collection('users').where('status', '==', 'pending').get().then(snapshot => {
+            db.collection('users').where('status', '==', 'pending').onSnapshot(snapshot => {
                 list.innerHTML = '';
                 if(snapshot.empty) {
                     list.innerHTML = '<li>പെൻഡിങ് അക്കൗണ്ടുകൾ ഒന്നുമില്ല.</li>';
@@ -77,7 +76,7 @@
                     li.style.background = "#f9f9f9";
                     li.style.border = "1px solid #ddd";
                     li.innerHTML = `<b>${data.name}</b> (${data.phone}) 
-                        <button onclick="approveUser('${doc.id}')" style="float: right; width: auto; padding: 5px 10px; background: green; margin-top:-5px;">അപ്പ്രൂവ് ചെയ്യുക</button>`;
+                        <button onclick="approveUser('${doc.id}')" style="float: right; width: auto; padding: 5px 10px; background: green; margin-top:-5px; color:white; border:none; cursor:pointer;">അപ്പ്രൂവ് ചെയ്യുക</button>`;
                     list.appendChild(li);
                 });
             });
@@ -87,8 +86,7 @@
             db.collection('users').doc(docId).update({
                 status: 'approved'
             }).then(() => {
-                alert("വിജയകരമായി അപ്പ്രൂവ് ചെയ്തു!");
-                loadPendingUsers();
+                // ആപ്പ് ഓട്ടോമാറ്റിക്കായി ലിസ്റ്റ് അപ്ഡേറ്റ് ചെയ്യും
             });
         }
 
@@ -98,11 +96,10 @@
                 alert("ദയവായി ഗൂഗിൾ ഷീറ്റ് ലിങ്ക് നൽകുക!");
                 return;
             }
-            // Google Sheet CSV ലിങ്ക് വഴി ഡാറ്റ ഫെച്ച് ചെയ്ത് ഫയർബേസിലേക്ക് ആഡ് ചെയ്യാനുള്ള കോഡ്
             fetch(url)
                 .then(response => response.text())
                 .then(data => {
-                    alert("ഡാറ്റ വിജയകരമായി റീഡ് ചെയ്തു! (റൊട്ടേഷൻ പ്രക്രിയ നടപ്പിലാക്കാം)");
+                    alert("ഡാറ്റ വിജയകരമായി റീഡ് ചെയ്തു!");
                 })
                 .catch(err => alert("എറർ: " + err));
         }
