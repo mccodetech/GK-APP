@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>മദ്രസ / ജികെ ക്വിസ് ആപ്പ് - ലോഗിൻ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>പഠന ആപ്പ് - ലോഗിൻ / രജിസ്ട്രേഷൻ</h2>
+        
+        <div id="form-box">
+            <input type="text" id="name" placeholder="കുട്ടിയുടെ പേര് (Name)" required>
+            <input type="tel" id="phone" placeholder="മൊബൈൽ നമ്പർ (Mobile Number)" required>
+            <button onclick="handleLoginRegister()">തുടരുക / രജിസ്റ്റർ ചെയ്യുക</button>
+        </div>
+
+        <p id="status-message" class="message"></p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
