@@ -6,21 +6,31 @@
     <title>പഠന ഡാഷ്‌ബോർഡ് - ക്വിസ്</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .timer-box { font-size: 18px; color: #d32f2f; font-weight: bold; margin-bottom: 10px; }
         .small-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #d32f2f !important; margin-top: 15px; }
         .level-btn { width: 100%; padding: 12px; background-color: #00796b; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; text-align: left; margin-bottom: 8px; }
         .level-btn:disabled { background-color: #ccc; cursor: not-allowed; }
         .user-profile { background: #e0f2f1; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* പ്രോഗ്രസ്സ് സർക്കിൾ ടൈമർ */
+        .timer-container { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .circular-timer { position: relative; width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(#00796b 360deg, #e0e0e0 0deg); display: flex; justify-content: center; align-items: center; }
+        .circular-timer span { position: absolute; font-size: 14px; font-weight: bold; color: #333; background: white; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+
+        /* ചോദ്യങ്ങളുടെ പ്രോഗ്രസ്സ് ബാർ (10 ബോക്സുകൾ) */
+        .q-progress-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 15px; }
+        .q-dot { width: 25px; height: 8px; background: #e0e0e0; border-radius: 4px; }
+        .q-dot.active { background: #ff9800; }
+        .q-dot.correct { background: #4caf50; }
+        .q-dot.wrong { background: #f44336; }
     </style>
 </head>
 <body>
     <div class="container" style="max-width: 650px;">
-        <h2>വിഷയങ്ങൾ & പഠന ഘട്ടങ്ങൾ</h2>
         
         <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ (മുകളിൽ) -->
         <div class="user-profile">
             <div>
-                <span id="user-icon" style="font-size: 24px;">⭐</span>
+                <span id="user-icon" style="font-size: 22px;">⭐</span>
                 <span id="welcome-user" style="font-weight: bold; color: #00796b; font-size: 16px;"></span>
             </div>
             <div id="user-score-display" style="font-weight: bold; color: #333;">സ്കോർ: 0</div>
@@ -32,7 +42,7 @@
             <div id="levels-container" style="max-height: 250px; overflow-y: auto;"></div>
         </div>
 
-        <!-- പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശവും പ്രിവ്യൂവും -->
+        <!-- പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശം -->
         <div id="intro-box" style="display: none; text-align: center;">
             <h3 id="intro-title">ഘട്ടം</h3>
             <p>ഈ ഘട്ടത്തിലെ 10 ചോദ്യങ്ങൾക്ക് ഉത്തരം നൽകി വിജയിക്കൂ!</p>
@@ -43,7 +53,16 @@
 
         <!-- ക്വിസ് സെക്ഷൻ -->
         <div id="quiz-box" style="display: none; text-align: left;">
-            <div id="timer" class="timer-box">സമയം ബാക്കി: 20 സെക്കൻഡ്</div>
+            <!-- 10 ചോദ്യങ്ങളുടെ പ്രോഗ്രസ്സ് ബാർ -->
+            <div class="q-progress-bar" id="q-dots-container"></div>
+
+            <!-- വിഷ്വൽ സർക്കുലർ ടൈമർ -->
+            <div class="timer-container">
+                <div class="circular-timer" id="timer-circle">
+                    <span id="timer-text">20</span>
+                </div>
+            </div>
+
             <h3 id="question-title">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
             <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
@@ -51,7 +70,6 @@
         <button onclick="logout()" class="small-btn">പുറത്തുപോവുക (Logout)</button>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script>
@@ -72,6 +90,7 @@
 
         const userName = localStorage.getItem('userName');
         const userPhone = localStorage.getItem('userPhone');
+        const userIcon = localStorage.getItem('userIcon') || '⭐';
 
         let userCurrentLevel = 1;
         let userScore = 0;
@@ -93,6 +112,7 @@
         if (!userPhone) {
             window.location.href = "index.html";
         } else {
+            document.getElementById('user-icon').innerText = userIcon;
             fetchUserData();
         }
 
@@ -104,7 +124,7 @@
                     userScore = data.score || 0;
                     userCurrentLevel = data.currentLevel || 1;
 
-                    document.getElementById('welcome-user').innerText = `${userNameFromDb}`;
+                    document.getElementById('welcome-user').innerText = `${userNameFromDb} (ഘട്ടം ${userCurrentLevel})`;
                     document.getElementById('user-score-display').innerText = `സ്കോർ: ${userScore}`;
                     loadLevels();
                 });
@@ -120,7 +140,6 @@
                 btn.innerText = name;
                 btn.className = 'level-btn';
                 
-                // കുട്ടിക്ക് എത്താൻ കഴിഞ്ഞ ലെവലുകൾ മാത്രം തുറക്കുക, മറ്റുള്ളവ ലോക്ക് ചെയ്യുക
                 if (levelNum > userCurrentLevel) {
                     btn.disabled = true;
                     btn.innerText += " 🔒";
@@ -152,6 +171,17 @@
         ];
 
         let timerInterval;
+        let questionStatuses = Array(10).fill(''); // ചോദ്യങ്ങളുടെ അവസ്ഥ ട്രാക്ക് ചെയ്യാൻ
+
+        function setupDots() {
+            const dotsContainer = document.getElementById('q-dots-container');
+            dotsContainer.innerHTML = '';
+            for(let i=0; i<10; i++) {
+                let dot = document.createElement('div');
+                dot.className = `q-dot ${questionStatuses[i]}`;
+                dotsContainer.appendChild(dot);
+            }
+        }
 
         function startActualQuiz() {
             document.getElementById('intro-box').style.display = 'none';
@@ -161,9 +191,11 @@
             let currentQIndex = 0;
             let correctAnswersCount = 0;
             const totalQuestions = sampleQuestions.length;
+            questionStatuses = Array(10).fill('');
 
             function showQuestion() {
                 if (currentQIndex < totalQuestions) {
+                    setupDots();
                     let qData = sampleQuestions[currentQIndex];
                     document.getElementById('question-title').innerText = `ചോദ്യം ${currentQIndex + 1}/10: ${qData.q}`;
                     
@@ -171,14 +203,18 @@
                     optContainer.innerHTML = '';
 
                     let timeLeft = 20;
-                    document.getElementById('timer').innerText = `സമയം ബാക്കി: ${timeLeft} സെക്കൻഡ്`;
-                    
+                    document.getElementById('timer-text').innerText = timeLeft;
+                    updateTimerCircle(timeLeft, 20);
+
                     clearInterval(timerInterval);
                     timerInterval = setInterval(() => {
                         timeLeft--;
-                        document.getElementById('timer').innerText = `സമയം ബാക്കി: ${timeLeft} സെക്കൻഡ്`;
+                        document.getElementById('timer-text').innerText = timeLeft;
+                        updateTimerCircle(timeLeft, 20);
+
                         if (timeLeft <= 0) {
                             clearInterval(timerInterval);
+                            questionStatuses[currentQIndex] = 'wrong';
                             currentQIndex++;
                             showQuestion();
                         }
@@ -192,6 +228,9 @@
                             clearInterval(timerInterval);
                             if (idx === qData.answer) {
                                 correctAnswersCount++;
+                                questionStatuses[currentQIndex] = 'correct';
+                            } else {
+                                questionStatuses[currentQIndex] = 'wrong';
                             }
                             currentQIndex++;
                             showQuestion();
@@ -200,10 +239,17 @@
                     });
                 } else {
                     clearInterval(timerInterval);
+                    setupDots();
                     evaluateResult(selectedLevel, correctAnswersCount, totalQuestions);
                 }
             }
             showQuestion();
+        }
+
+        function updateTimerCircle(current, total) {
+            let degree = (current / total) * 360;
+            let circle = document.getElementById('timer-circle');
+            circle.style.background = `conic-gradient(#00796b ${degree}deg, #e0e0e0 0deg)`;
         }
 
         function evaluateResult(levelNum, scoreCount, total) {
@@ -211,7 +257,6 @@
             const quizBox = document.getElementById('quiz-box');
 
             if (percentage >= 90) {
-                // വിജയിച്ചാൽ അടുത്ത ലെവൽ അൺലോക്ക് ചെയ്യും
                 let nextLevel = (levelNum >= userCurrentLevel) ? levelNum + 1 : userCurrentLevel;
                 quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ വിജയിച്ചു!</h3>
                                     <p>സ്കോർ: ${scoreCount}/${total} (${percentage}%)</p>
