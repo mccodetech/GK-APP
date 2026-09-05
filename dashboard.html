@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <!-- ക്വിസ് സെക്ഷൻ (തുടക്കത്തിൽ മറച്ചുവെച്ചിരിക്കുന്നു) -->
+        <!-- ക്വിസ് സെക്ഷൻ -->
         <div id="quiz-box" style="display: none; text-align: left;">
             <h3 id="question-title">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
             <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -40,14 +40,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script>
-        // ഫയർബേസ് കോൺഫിഗറേഷൻ (index.html ലെ കോഡ് തന്നെ ഇവിടെയും നൽകുക)
+        // Firebase കോൺഫിഗറേഷൻ (നിങ്ങൾ നൽകിയ വിവരങ്ങൾ)
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDxKaF7sFUCsbcyZ9FkQxZtpvBL5Ga-yew",
+            authDomain: "gk-app-2274e.firebaseapp.com",
+            projectId: "gk-app-2274e",
+            storageBucket: "gk-app-2274e.firebasestorage.app",
+            messagingSenderId: "249982405152",
+            appId: "1:249982405152:web:dd441a778ab94d86078a45",
+            measurementId: "G-50X2DDE274"
         };
 
         if (!firebase.apps.length) {
@@ -59,7 +60,7 @@
         const userPhone = localStorage.getItem('userPhone');
 
         if (!userPhone) {
-            window.location.href = "index.html"; // ലോഗിൻ ചെയ്തില്ലെങ്കിൽ തിരിച്ചുവിടും
+            window.location.href = "index.html";
         } else {
             document.getElementById('welcome-user').innerText = `സ്വാഗതം, ${userName}!`;
             loadLevels();
@@ -78,7 +79,6 @@
             }
         }
 
-        // ലളിതമായ ക്വിസ് ഉദാഹരണം
         const sampleQuestions = [
             { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answer: 2 },
             { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answer: 0 }
