@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>പഠന ഡാഷ്‌ബോർഡ് - ക്വിസ്</title>
+    <title>കുട്ടിക്വിസ് (KuttyQuiz) - പഠന ഡാഷ്‌ബോർഡ്</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .small-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #d32f2f !important; margin-top: 15px; }
@@ -24,6 +24,9 @@
 <body>
     <div class="container" style="max-width: 650px;">
         
+        <!-- ആപ്പിന്റെ പേര് മുകളിൽ ഹൈലൈറ്റ് ചെയ്ത് കാണിക്കുന്നു -->
+        <h2 style="color: #00796b; margin-top: 0;">📚 കുട്ടിക്വിസ് (KuttyQuiz)</h2>
+
         <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ -->
         <div class="user-profile">
             <div>
@@ -185,6 +188,7 @@
             document.getElementById('main-category-section').style.display = 'block';
         }
 
+        // ആ നിശ്ചിത വിഷയത്തിലുള്ള ചോദ്യങ്ങൾ മാത്രം ഡാറ്റാബേസിൽ നിന്ന് ഫെച്ച് ചെയ്യുന്നു
         function loadQuestionsFromDb(sectionKey, subjectName) {
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
@@ -227,6 +231,8 @@
             document.getElementById('sub-category-section').style.display = 'none';
             document.getElementById('intro-box').style.display = 'block';
             document.getElementById('intro-title').innerText = title;
+            
+            // ആ വിഷയത്തിലെ ചോദ്യങ്ങൾ മാത്രം എടുത്ത് ഷഫിൾ ചെയ്യുന്നു (രണ്ടാമത്തെ ലെവലിലെ ചോദ്യങ്ങൾ ഇതിലേക്ക് വരില്ല)
             activeQuestions = shuffleArray([...qList]);
         }
 
@@ -260,6 +266,7 @@
                     let optContainer = document.getElementById('options-container');
                     optContainer.innerHTML = '';
 
+                    // ചോദ്യത്തിലെ ഓപ്ഷനുകൾ മാത്രം ഷഫിൾ ചെയ്യുന്നു
                     let shuffledOptions = shuffleArray([...qData.options]);
                     let timeLeft = 20;
                     document.getElementById('timer-text').innerText = timeLeft;
@@ -287,7 +294,6 @@
                         optBtn.onclick = () => {
                             clearInterval(timerInterval);
                             
-                            // സ്പെയ്സോ വലിയ ചെറിയ അക്ഷരങ്ങളോ പ്രശ്നമാകാതെ കൃത്യമായി മാച്ച് ചെയ്യാനുള്ള കോഡ്
                             let selectedOpt = String(opt).trim().toLowerCase();
                             let correctAns = String(qData.answerText).trim().toLowerCase();
 
