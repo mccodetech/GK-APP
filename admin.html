@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>അഡ്മിൻ പാനൽ</title>
+    <title>അഡ്മിൻ പാനൽ - ക്വിസ് ആപ്പ്</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .admin-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd; }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        .input-group select, .input-group input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        .admin-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd; text-align: left; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 14px; }
+        .input-group select, .input-group input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        .question-card { background: #fff; padding: 10px; border: 1px solid #ccc; margin-bottom: 8px; border-radius: 5px; font-size: 14px; }
+        .action-btn { padding: 4px 8px; font-size: 12px; cursor: pointer; border: none; border-radius: 3px; color: white; }
     </style>
 </head>
 <body>
-    <div class="container" style="max-width: 600px;">
+    <div class="container" style="max-width: 650px;">
         <h2 style="color: #00796b;">അഡ്മിൻ പാനൽ</h2>
         
+        <!-- അഡ്മിൻ ലോഗിൻ -->
         <div id="admin-login-box">
             <input type="text" id="admin-user" placeholder="അഡ്മിൻ യൂസർനെയിം (admin)">
             <input type="password" id="admin-pass" placeholder="പാസ്‌വേർഡ് (admin123)">
             <button onclick="loginAdmin()">അഡ്മിൻ ലോഗിൻ</button>
         </div>
 
-        <div id="admin-dashboard" style="display: none; text-align: left;">
+        <!-- അഡ്മിൻ ഡാഷ്‌ബോർഡ് -->
+        <div id="admin-dashboard" style="display: none;">
             
             <!-- പെൻഡിങ് അക്കൗണ്ടുകൾ -->
             <div class="admin-section">
@@ -30,42 +34,84 @@
                 <ul id="pending-list" style="list-style: none; padding: 0;"></ul>
             </div>
 
-            <!-- വിഷയങ്ങൾ സെറ്റ് ചെയ്യാനുള്ള ഭാഗം -->
+            <!-- വിഷയങ്ങൾ ക്രമീകരിക്കാൻ -->
             <div class="admin-section">
-                <h3 style="color: #00796b; margin-top: 0;">വിഷയങ്ങൾ ക്രമീകരിക്കുക (Manage Subjects)</h3>
-                <p style="font-size: 13px; color: #555;">ഓരോ ക്ലാസിലെയും വിഷയങ്ങൾ കോമ ( , ) ഇട്ട് നൽകുക. (ഉദാ: ഖുർആൻ, ഫിഖ്ഹ്, അറബിക്)</p>
-                
+                <h3 style="color: #00796b; margin-top: 0;">വിഷയങ്ങൾ ക്രമീകരിക്കുക</h3>
+                <div class="input-group">
+                    <label>വിഭാഗം & ക്ലാസ്സ്:</label>
+                    <select id="sub-category"><option value="madrasa">മദ്രസ</option><option value="school">സ്കൂൾ</option></select>
+                    <select id="sub-class" style="margin-top: 5px;"><option value="1">ക്ലാസ്സ് 1</option><option value="2">ക്ലാസ്സ് 2</option><option value="3">ക്ലാസ്സ് 3</option><option value="4">ക്ലാസ്സ് 4</option><option value="5">ക്ലാസ്സ് 5</option><option value="6">ക്ലാസ്സ് 6</option><option value="7">ക്ലാസ്സ് 7</option><option value="8">ക്ലാസ്സ് 8</option><option value="9">ക്ലാസ്സ് 9</option><option value="10">ക്ലാസ്സ് 10</option></select>
+                </div>
+                <div class="input-group">
+                    <label>വിഷയങ്ങൾ (കോമ ഇട്ട് നൽകുക):</label>
+                    <input type="text" id="subject-names" placeholder="ഉദാ: ഖുർആൻ, ഫിഖ്ഹ്">
+                </div>
+                <button onclick="saveSubjects()" style="background-color: #0288d1;">വിഷയങ്ങൾ സേവ് ചെയ്യുക</button>
+            </div>
+
+            <!-- 1. ഗൂഗിൾ ഷീറ്റ് വഴി ചോദ്യങ്ങൾ ഇമ്പോർട്ട് ചെയ്യാൻ -->
+            <div class="admin-section">
+                <h3 style="color: #388e3c; margin-top: 0;">ഗൂഗിൾ ഷീറ്റ് വഴി ചോദ്യങ്ങൾ ചേർക്കാൻ</h3>
                 <div class="input-group">
                     <label>വിഭാഗം തിരഞ്ഞെടുക്കുക:</label>
-                    <select id="subject-category">
+                    <select id="q-category">
                         <option value="madrasa">മദ്രസ</option>
                         <option value="school">സ്കൂൾ</option>
+                        <option value="gk">GK & Current Affairs</option>
                     </select>
                 </div>
-
                 <div class="input-group">
-                    <label>ക്ലാസ്സ് തിരഞ്ഞെടുക്കുക:</label>
-                    <select id="subject-class">
-                        <option value="1">ക്ലാസ്സ് 1</option><option value="2">ക്ലാസ്സ് 2</option>
-                        <option value="3">ക്ലാസ്സ് 3</option><option value="4">ക്ലാസ്സ് 4</option>
-                        <option value="5">ക്ലാസ്സ് 5</option><option value="6">ക്ലാസ്സ് 6</option>
-                        <option value="7">ക്ലാസ്സ് 7</option><option value="8">ക്ലാസ്സ് 8</option>
-                        <option value="9">ക്ലാസ്സ് 9</option><option value="10">ക്ലാസ്സ് 10</option>
-                    </select>
+                    <label>വിഷയത്തിന്റെ പേര് (ഉദാ: ഖുർആൻ - ക്ലാസ്സ് 1):</label>
+                    <input type="text" id="q-subject-name" placeholder="വിഷയത്തിന്റെ കൃത്യമായ പേര് നൽകുക">
                 </div>
-
                 <div class="input-group">
-                    <label>വിഷയങ്ങൾ നൽകുക:</label>
-                    <input type="text" id="subject-names" placeholder="ഉദാ: ഖുർആൻ, ഫിഖ്ഹ്, താരീഖ്">
+                    <label>Google Sheet CSV Link:</label>
+                    <input type="text" id="csv-link" placeholder="https://docs.google.com/spreadsheets/.../pub?output=csv">
                 </div>
+                <button onclick="importQuestionsFromCSV()" style="background-color: #388e3c;">ചോദ്യങ്ങൾ ഇമ്പോർട്ട് ചെയ്യുക</button>
+            </div>
 
-                <button onclick="saveSubjects()" style="background-color: #0288d1;">സേവ് ചെയ്യുക</button>
+            <!-- 2. മാന്വലായി ഒറ്റ ചോദ്യം ചേർക്കാൻ / എഡിറ്റ് ചെയ്യാൻ -->
+            <div class="admin-section">
+                <h3 style="color: #e65100; margin-top: 0;" id="form-title">പുതിയ ചോദ്യം മാന്വലായി ചേർക്കാൻ</h3>
+                <input type="hidden" id="edit-doc-id">
+                <div class="input-group">
+                    <label>വിഷയത്തിന്റെ പേര്:</label>
+                    <input type="text" id="manual-subject" placeholder="ഏത് വിഷയത്തിലേക്കാണ്?">
+                </div>
+                <div class="input-group">
+                    <label>ചോദ്യം:</label>
+                    <input type="text" id="manual-q" placeholder="ചോദ്യം ഇവിടെ എഴുതുക">
+                </div>
+                <div class="input-group">
+                    <label>ഓപ്ഷനുകൾ:</label>
+                    <input type="text" id="manual-opt1" placeholder="ഓപ്ഷൻ A" style="margin-bottom:4px;">
+                    <input type="text" id="manual-opt2" placeholder="ഓപ്ഷൻ B" style="margin-bottom:4px;">
+                    <input type="text" id="manual-opt3" placeholder="ഓപ്ഷൻ C" style="margin-bottom:4px;">
+                    <input type="text" id="manual-opt4" placeholder="ഓപ്ഷൻ D">
+                </div>
+                <div class="input-group">
+                    <label>ശരിയായ ഉത്തരം (കൃത്യമായ ഓപ്ഷൻ ടെക്സ്റ്റ് നൽകുക):</label>
+                    <input type="text" id="manual-ans" placeholder="ശരിയായ ഓപ്ഷൻ ഇവിടെ ടൈപ്പ് ചെയ്യുക">
+                </div>
+                <button id="save-q-btn" onclick="saveManualQuestion()" style="background-color: #e65100;">ചോദ്യം സേവ് ചെയ്യുക</button>
+            </div>
+
+            <!-- നിലവിലുള്ള ചോദ്യങ്ങൾ കാണാനും എഡിറ്റ്/ഡിലീറ്റ് ചെയ്യാനും -->
+            <div class="admin-section">
+                <h3 style="color: #4527a0; margin-top: 0;">ചോദ്യങ്ങൾ മാനേജ് ചെയ്യുക (Manage Questions)</h3>
+                <div class="input-group">
+                    <label>വിഷയം സെർച്ച് ചെയ്യുക:</label>
+                    <input type="text" id="search-subject" placeholder="വിഷയത്തിന്റെ പേര് നൽകി എന്റർ ചെയ്യുക" onkeyup="loadQuestionsForManagement()">
+                </div>
+                <div id="questions-manage-container" style="max-height: 300px; overflow-y: auto;">
+                    <p style="color: #775;">വിഷയത്തിന്റെ പേര് നൽകിയാൽ ചോദ്യങ്ങൾ ഇവിടെ കാണാം.</p>
+                </div>
             </div>
 
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script>
@@ -79,9 +125,7 @@
             measurementId: "G-50X2DDE274"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         function loginAdmin() {
@@ -109,7 +153,7 @@
                     let li = document.createElement('li');
                     li.style.margin = "10px 0"; li.style.padding = "10px"; li.style.background = "#fff"; li.style.border = "1px solid #ddd";
                     li.innerHTML = `<b>${data.name}</b> (${data.phone}) 
-                        <button onclick="approveUser('${doc.id}')" style="float: right; width: auto; padding: 5px 10px; background: green; margin-top:-5px; color:white; border:none; cursor:pointer; border-radius:4px;">അപ്പ്രൂവ്</button>`;
+                        <button onclick="approveUser('${doc.id}')" style="float: right; width: auto; padding: 4px 8px; background: green; color:white; border:none; cursor:pointer; border-radius:3px;">അപ്പ്രൂവ്</button>`;
                     list.appendChild(li);
                 });
             });
@@ -119,29 +163,165 @@
             db.collection('users').doc(docId).update({ status: 'approved' });
         }
 
-        // അഡ്മിൻ നൽകുന്ന വിഷയങ്ങൾ ഡാറ്റാബേസിൽ സേവ് ചെയ്യാനുള്ള ഫങ്ക്ഷൻ
         function saveSubjects() {
-            let category = document.getElementById('subject-category').value;
-            let classNum = document.getElementById('subject-class').value;
+            let category = document.getElementById('sub-category').value;
+            let classNum = document.getElementById('sub-class').value;
             let subjectsRaw = document.getElementById('subject-names').value;
 
-            if(!subjectsRaw.trim()) {
-                alert("ദയവായി വിഷയങ്ങൾ നൽകുക!");
-                return;
-            }
-
-            // കോമ ഇട്ട് നൽകിയ പേരുകളെ വേർതിരിച്ച് ലിസ്റ്റ് ആക്കുന്നു
+            if(!subjectsRaw.trim()) { alert("ദയവായി വിഷയങ്ങൾ നൽകുക!"); return; }
             let subjectsArray = subjectsRaw.split(',').map(s => s.trim()).filter(s => s !== "");
 
-            // ഡാറ്റാബേസിലെ 'settings' കളക്ഷനിൽ സേവ് ചെയ്യുന്നു
             db.collection('settings').doc(category + '_class_' + classNum).set({
                 subjects: subjectsArray
             }).then(() => {
                 alert("വിഷയങ്ങൾ വിജയകരമായി സേവ് ചെയ്തു!");
                 document.getElementById('subject-names').value = '';
-            }).catch(error => {
-                alert("എറർ: " + error.message);
             });
+        }
+
+        // ഗൂഗിൾ ഷീറ്റ് CSV ലിങ്ക് വഴി ഇമ്പോർട്ട് ചെയ്യാൻ (A, B, C, D മാപ്പ് ചെയ്യുന്ന രീതി)
+        function getCorrectAnswerTextFromRow(row) {
+            let ansKey = String(row.Correct_Answer || '').trim().toUpperCase();
+            if (ansKey === 'A') return row.Option_A;
+            if (ansKey === 'B') return row.Option_B;
+            if (ansKey === 'C') return row.Option_C;
+            if (ansKey === 'D') return row.Option_D;
+            return row.Correct_Answer;
+        }
+
+        function importQuestionsFromCSV() {
+            let subjectName = document.getElementById('q-subject-name').value.trim();
+            let url = document.getElementById('csv-link').value.trim();
+
+            if(!subjectName || !url) { alert("വിഷയത്തിന്റെ പേരും ലിങ്കും നൽകുക!"); return; }
+
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    let rows = data.split('\n');
+                    let count = 0;
+                    for(let i = 1; i < rows.length; i++) {
+                        let rowText = rows[i].trim();
+                        if(rowText) {
+                            let cols = rowText.split(',');
+                            if(cols.length >= 6) {
+                                let qObj = {
+                                    Question: cols[0].replace(/^"|"$/g, '').trim(),
+                                    Option_A: cols[1].replace(/^"|"$/g, '').trim(),
+                                    Option_B: cols[2].replace(/^"|"$/g, '').trim(),
+                                    Option_C: cols[3].replace(/^"|"$/g, '').trim(),
+                                    Option_D: cols[4].replace(/^"|"$/g, '').trim(),
+                                    Correct_Answer: cols[5].replace(/^"|"$/g, '').trim()
+                                };
+                                db.collection('questions').add({
+                                    subject: subjectName,
+                                    Question: qObj.Question,
+                                    Option_A: qObj.Option_A,
+                                    Option_B: qObj.Option_B,
+                                    Option_C: qObj.Option_C,
+                                    Option_D: qObj.Option_D,
+                                    answerText: getCorrectAnswerTextFromRow(qObj)
+                                });
+                                count++;
+                            }
+                        }
+                    }
+                    alert(`${count} ചോദ്യങ്ങൾ വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു!`);
+                    document.getElementById('q-subject-name').value = '';
+                    document.getElementById('csv-link').value = '';
+                })
+                .catch(err => alert("എറർ: " + err));
+        }
+
+        // മാന്വലായി ചോദ്യം ചേർക്കാനും എഡിറ്റ് ചെയ്യാനും
+        function saveManualQuestion() {
+            let docId = document.getElementById('edit-doc-id').value;
+            let subject = document.getElementById('manual-subject').value.trim();
+            let Question = document.getElementById('manual-q').value.trim();
+            let Option_A = document.getElementById('manual-opt1').value.trim();
+            let Option_B = document.getElementById('manual-opt2').value.trim();
+            let Option_C = document.getElementById('manual-opt3').value.trim();
+            let Option_D = document.getElementById('manual-opt4').value.trim();
+            let answerText = document.getElementById('manual-ans').value.trim();
+
+            if(!subject || !Question || !answerText) {
+                alert("ദയവായി എല്ലാ പ്രധാന വിവരങ്ങളും നൽകുക!");
+                return;
+            }
+
+            let dataObj = { subject, Question, Option_A, Option_B, Option_C, Option_D, answerText };
+
+            if(docId) {
+                // എഡിറ്റ് ചെയ്യുമ്പോൾ
+                db.collection('questions').doc(docId).update(dataObj).then(() => {
+                    alert("ചോദ്യം വിജയകരമായി അപ്ഡേറ്റ് ചെയ്തു!");
+                    resetForm();
+                });
+            } else {
+                // പുതിയത് ചേർക്കുമ്പോൾ
+                db.collection('questions').add(dataObj).then(() => {
+                    alert("ചോദ്യം വിജയകരമായി ചേർത്തു!");
+                    resetForm();
+                });
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('edit-doc-id').value = '';
+            document.getElementById('manual-subject').value = '';
+            document.getElementById('manual-q').value = '';
+            document.getElementById('manual-opt1').value = '';
+            document.getElementById('manual-opt2').value = '';
+            document.getElementById('manual-opt3').value = '';
+            document.getElementById('manual-opt4').value = '';
+            document.getElementById('manual-ans').value = '';
+            document.getElementById('form-title').innerText = "പുതിയ ചോദ്യം മാന്വലായി ചേർക്കാൻ";
+            document.getElementById('save-q-btn').innerText = "ചോദ്യം സേവ് ചെയ്യുക";
+        }
+
+        // ചോദ്യങ്ങൾ മാനേജ് ചെയ്യാനും എഡിറ്റ്/ഡിലീറ്റ് ചെയ്യാനും
+        function loadQuestionsForManagement() {
+            let searchSubj = document.getElementById('search-subject').value.trim();
+            let container = document.getElementById('questions-manage-container');
+            if(!searchSubj) { container.innerHTML = '<p>വിഷയത്തിന്റെ പേര് നൽകുക.</p>'; return; }
+
+            db.collection('questions').where('subject', '==', searchSubj).get().then(snapshot => {
+                container.innerHTML = '';
+                if(snapshot.empty) { container.innerHTML = '<p style="color:red;">ഈ വിഷയത്തിൽ ചോദ്യങ്ങൾ ഒന്നും കണ്ടെത്തിയില്ല.</p>'; return; }
+                
+                snapshot.forEach(doc => {
+                    let d = doc.data();
+                    let card = document.createElement('div');
+                    card.className = 'question-card';
+                    card.innerHTML = `<b>ചോദ്യം:</b> ${d.Question} <br><b>ഉത്തരം:</b> ${d.answerText} <br><br>
+                        <button class="action-btn" style="background:#0288d1;" onclick="editQuestion('${doc.id}', '${d.subject}', '${d.Question}', '${d.Option_A}', '${d.Option_B}', '${d.Option_C}', '${d.Option_D}', '${d.answerText}')">എഡിറ്റ്</button>
+                        <button class="action-btn" style="background:#d32f2f;" onclick="deleteQuestion('${doc.id}')">ഡിലീറ്റ്</button>`;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        function editQuestion(id, sub, q, o1, o2, o3, o4, ans) {
+            document.getElementById('edit-doc-id').value = id;
+            document.getElementById('manual-subject').value = sub;
+            document.getElementById('manual-q').value = q;
+            document.getElementById('manual-opt1').value = o1;
+            document.getElementById('manual-opt2').value = o2;
+            document.getElementById('manual-opt3').value = o3;
+            document.getElementById('manual-opt4').value = o4;
+            document.getElementById('manual-ans').value = ans;
+            document.getElementById('form-title').innerText = "ചോദ്യം എഡിറ്റ് ചെയ്യുക";
+            document.getElementById('save-q-btn').innerText = "അപ്ഡേറ്റ് ചെയ്യുക";
+            window.scrollTo({ top: 500, behavior: 'smooth' });
+        }
+
+        function deleteQuestion(id) {
+            if(confirm("ഈ ചോദ്യം ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?")) {
+                db.collection('questions').doc(id).delete().then(() => {
+                    alert("ചോദ്യം ഡിലീറ്റ് ചെയ്തു!");
+                    loadQuestionsForManagement();
+                });
+            }
         }
     </script>
 </body>
