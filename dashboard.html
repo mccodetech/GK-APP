@@ -134,12 +134,19 @@
                 }
             } else if (category === 'gk') {
                 subTitle.innerText = "വിഷയങ്ങൾ തിരഞ്ഞെടുക്കുക";
-                ['പൊതുവിജ്ഞാനം (GK)', 'കറന്റ് അഫയേഴ്സ് (Current Affairs)'].forEach(subj => {
-                    let btn = document.createElement('button');
-                    btn.className = 'menu-btn';
-                    btn.innerText = subj;
-                    btn.onclick = () => loadQuestionsFromDb('gk', subj);
-                    container.appendChild(btn);
+                db.collection('settings').doc('gk_subjects').get().then(doc => {
+                    container.innerHTML = '';
+                    if(doc.exists && doc.data().subjects) {
+                        doc.data().subjects.forEach(subj => {
+                            let btn = document.createElement('button');
+                            btn.className = 'menu-btn';
+                            btn.innerText = subj;
+                            btn.onclick = () => loadQuestionsFromDb('gk', subj);
+                            container.appendChild(btn);
+                        });
+                    } else {
+                        container.innerHTML = '<p style="color:red;">വിഷയങ്ങൾ ലഭ്യമല്ല.</p>';
+                    }
                 });
             }
         }
@@ -152,14 +159,17 @@
             subTitle.innerText = `${catName} - ക്ലാസ്സ് ${classNum} - വിഷയം തിരഞ്ഞെടുക്കുക`;
             container.innerHTML = '<p style="color:#00796b;">ലോഡ് ചെയ്യുന്നു...</p>';
 
-            db.collection('settings').doc(category + '_class_' + classNum).get().then(doc => {
+            let docKey = category + '_class_' + classNum;
+            let sectionKey = category + '_' + classNum;
+
+            db.collection('settings').doc(docKey).get().then(doc => {
                 container.innerHTML = '';
                 if (doc.exists && doc.data().subjects && doc.data().subjects.length > 0) {
                     doc.data().subjects.forEach(subj => {
                         let btn = document.createElement('button');
                         btn.className = 'menu-btn';
                         btn.innerText = subj;
-                        btn.onclick = () => loadQuestionsFromDb(category + '_' + classNum, subj);
+                        btn.onclick = () => loadQuestionsFromDb(sectionKey, subj);
                         container.appendChild(btn);
                     });
                 } else {
@@ -175,17 +185,6 @@
             document.getElementById('main-category-section').style.display = 'block';
         }
 
-        // ഗൂഗിൾ ഷീറ്റിലെ A, B, C, D ഉത്തരങ്ങളെ യഥാർത്ഥ ഓപ്ഷൻ ടെക്സ്റ്റിലേക്ക് മാറ്റുന്ന കോഡ്
-        function getCorrectAnswerText(row) {
-            let ansKey = String(row.Correct_Answer || '').trim().toUpperCase();
-            if (ansKey === 'A') return row.Option_A;
-            if (ansKey === 'B') return row.Option_B;
-            if (ansKey === 'C') return row.Option_C;
-            if (ansKey === 'D') return row.Option_D;
-            return row.Correct_Answer; // ഒരുപക്ഷേ നേരിട്ട് ടെക്സ്റ്റ് നൽകിയിട്ടുണ്ടെങ്കിൽ
-        }
-
-        // ഫയർബേസിൽ നിന്ന് ചോദ്യങ്ങൾ എടുത്തു വരുന്ന ഫങ്ക്ഷൻ
         function loadQuestionsFromDb(sectionKey, subjectName) {
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
@@ -196,26 +195,21 @@
                 let questionsList = [];
                 snapshot.forEach(doc => {
                     let row = doc.data();
-                    let correctAns = getCorrectAnswerText(row);
                     questionsList.push({
                         q: row.Question,
                         options: [row.Option_A, row.Option_B, row.Option_C, row.Option_D],
-                        answerText: correctAns
+                        answerText: row.answerText
                     });
                 });
 
                 if(questionsList.length > 0) {
                     prepareQuiz(subjectName, questionsList);
                 } else {
-                    // ഡാറ്റാബേസിൽ ചോദ്യങ്ങൾ ഇല്ലെങ്കിൽ സാമ്പിൾ ചോദ്യങ്ങൾ നൽകാം
-                    let sampleFallback = [
-                        { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answerText: "5" },
-                        { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answerText: "114" }
-                    ];
-                    prepareQuiz(subjectName, sampleFallback);
+                    alert("ഈ വിഷയത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
+                    goBackToMain();
                 }
             }).catch(err => {
-                alert("ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്: ചുമതലപ്പെട്ട അഡ്മിനെ ബന്ധപ്പെടുക.");
+                alert("ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്!");
             });
         }
 
@@ -292,7 +286,12 @@
                         optBtn.style.marginBottom = "5px";
                         optBtn.onclick = () => {
                             clearInterval(timerInterval);
-                            if (String(opt).trim() === String(qData.answerText).trim()) {
+                            
+                            // സ്പെയ്സോ വലിയ ചെറിയ അക്ഷരങ്ങളോ പ്രശ്നമാകാതെ കൃത്യമായി മാച്ച് ചെയ്യാനുള്ള കോഡ്
+                            let selectedOpt = String(opt).trim().toLowerCase();
+                            let correctAns = String(qData.answerText).trim().toLowerCase();
+
+                            if (selectedOpt === correctAns) {
                                 correctAnswersCount++;
                                 questionStatuses[currentQIndex] = 'correct';
                             } else {
