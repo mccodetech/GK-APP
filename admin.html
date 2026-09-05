@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>അഡ്മിൻ പാനൽ</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-section { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .input-group select, .input-group input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+    </style>
 </head>
 <body>
     <div class="container" style="max-width: 600px;">
-        <h2>അഡ്മിൻ പാനൽ</h2>
+        <h2 style="color: #00796b;">അഡ്മിൻ പാനൽ</h2>
         
         <div id="admin-login-box">
             <input type="text" id="admin-user" placeholder="അഡ്മിൻ യൂസർനെയിം (admin)">
@@ -17,13 +23,45 @@
         </div>
 
         <div id="admin-dashboard" style="display: none; text-align: left;">
-            <h3>പെൻഡിങ് അക്കൗണ്ടുകൾ (Pending Approvals)</h3>
-            <ul id="pending-list" style="list-style: none; padding: 0;"></ul>
             
-            <h3 style="margin-top: 30px;">Google Sheet വഴി ഡാറ്റ ചേർക്കാൻ</h3>
-            <p style="font-size: 14px; color: #555;">താഴെ പറയുന്ന മാതൃകയിലുള്ള Google Sheet ലിങ്ക് നൽകുക:</p>
-            <input type="text" id="sheet-link" placeholder="Google Sheet CSV Link ഇവിടെ നൽകുക">
-            <button onclick="importFromSheet()" style="background-color: #0288d1;">ഡാറ്റ ഇമ്പോർട്ട് ചെയ്യുക</button>
+            <!-- പെൻഡിങ് അക്കൗണ്ടുകൾ -->
+            <div class="admin-section">
+                <h3 style="color: #d32f2f; margin-top: 0;">പെൻഡിങ് അക്കൗണ്ടുകൾ</h3>
+                <ul id="pending-list" style="list-style: none; padding: 0;"></ul>
+            </div>
+
+            <!-- വിഷയങ്ങൾ സെറ്റ് ചെയ്യാനുള്ള ഭാഗം -->
+            <div class="admin-section">
+                <h3 style="color: #00796b; margin-top: 0;">വിഷയങ്ങൾ ക്രമീകരിക്കുക (Manage Subjects)</h3>
+                <p style="font-size: 13px; color: #555;">ഓരോ ക്ലാസിലെയും വിഷയങ്ങൾ കോമ ( , ) ഇട്ട് നൽകുക. (ഉദാ: ഖുർആൻ, ഫിഖ്ഹ്, അറബിക്)</p>
+                
+                <div class="input-group">
+                    <label>വിഭാഗം തിരഞ്ഞെടുക്കുക:</label>
+                    <select id="subject-category">
+                        <option value="madrasa">മദ്രസ</option>
+                        <option value="school">സ്കൂൾ</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>ക്ലാസ്സ് തിരഞ്ഞെടുക്കുക:</label>
+                    <select id="subject-class">
+                        <option value="1">ക്ലാസ്സ് 1</option><option value="2">ക്ലാസ്സ് 2</option>
+                        <option value="3">ക്ലാസ്സ് 3</option><option value="4">ക്ലാസ്സ് 4</option>
+                        <option value="5">ക്ലാസ്സ് 5</option><option value="6">ക്ലാസ്സ് 6</option>
+                        <option value="7">ക്ലാസ്സ് 7</option><option value="8">ക്ലാസ്സ് 8</option>
+                        <option value="9">ക്ലാസ്സ് 9</option><option value="10">ക്ലാസ്സ് 10</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>വിഷയങ്ങൾ നൽകുക:</label>
+                    <input type="text" id="subject-names" placeholder="ഉദാ: ഖുർആൻ, ഫിഖ്ഹ്, താരീഖ്">
+                </div>
+
+                <button onclick="saveSubjects()" style="background-color: #0288d1;">സേവ് ചെയ്യുക</button>
+            </div>
+
         </div>
     </div>
 
@@ -49,17 +87,15 @@
         function loginAdmin() {
             let user = document.getElementById('admin-user').value.trim();
             let pass = document.getElementById('admin-pass').value.trim();
-
             if (user === "admin" && pass === "admin123") {
                 document.getElementById('admin-login-box').style.display = 'none';
                 document.getElementById('admin-dashboard').style.display = 'block';
-                loadPendingUsersLive(); // തത്സമയം ലോഡ് ചെയ്യാൻ
+                loadPendingUsersLive();
             } else {
                 alert("തെറ്റായ യൂസർനെയിം അല്ലെങ്കിൽ പാസ്‌വേർഡ്!");
             }
         }
 
-        // തത്സമയം (Real-time) പെൻഡിങ് യൂസർമാരെ കാണിക്കാൻ onSnapshot ഉപയോഗിക്കുന്നു
         function loadPendingUsersLive() {
             const list = document.getElementById('pending-list');
             db.collection('users').where('status', '==', 'pending').onSnapshot(snapshot => {
@@ -71,37 +107,41 @@
                 snapshot.forEach(doc => {
                     let data = doc.data();
                     let li = document.createElement('li');
-                    li.style.margin = "10px 0";
-                    li.style.padding = "10px";
-                    li.style.background = "#f9f9f9";
-                    li.style.border = "1px solid #ddd";
+                    li.style.margin = "10px 0"; li.style.padding = "10px"; li.style.background = "#fff"; li.style.border = "1px solid #ddd";
                     li.innerHTML = `<b>${data.name}</b> (${data.phone}) 
-                        <button onclick="approveUser('${doc.id}')" style="float: right; width: auto; padding: 5px 10px; background: green; margin-top:-5px; color:white; border:none; cursor:pointer;">അപ്പ്രൂവ് ചെയ്യുക</button>`;
+                        <button onclick="approveUser('${doc.id}')" style="float: right; width: auto; padding: 5px 10px; background: green; margin-top:-5px; color:white; border:none; cursor:pointer; border-radius:4px;">അപ്പ്രൂവ്</button>`;
                     list.appendChild(li);
                 });
             });
         }
 
         function approveUser(docId) {
-            db.collection('users').doc(docId).update({
-                status: 'approved'
-            }).then(() => {
-                // ആപ്പ് ഓട്ടോമാറ്റിക്കായി ലിസ്റ്റ് അപ്ഡേറ്റ് ചെയ്യും
-            });
+            db.collection('users').doc(docId).update({ status: 'approved' });
         }
 
-        function importFromSheet() {
-            let url = document.getElementById('sheet-link').value.trim();
-            if(!url) {
-                alert("ദയവായി ഗൂഗിൾ ഷീറ്റ് ലിങ്ക് നൽകുക!");
+        // അഡ്മിൻ നൽകുന്ന വിഷയങ്ങൾ ഡാറ്റാബേസിൽ സേവ് ചെയ്യാനുള്ള ഫങ്ക്ഷൻ
+        function saveSubjects() {
+            let category = document.getElementById('subject-category').value;
+            let classNum = document.getElementById('subject-class').value;
+            let subjectsRaw = document.getElementById('subject-names').value;
+
+            if(!subjectsRaw.trim()) {
+                alert("ദയവായി വിഷയങ്ങൾ നൽകുക!");
                 return;
             }
-            fetch(url)
-                .then(response => response.text())
-                .then(data => {
-                    alert("ഡാറ്റ വിജയകരമായി റീഡ് ചെയ്തു!");
-                })
-                .catch(err => alert("എറർ: " + err));
+
+            // കോമ ഇട്ട് നൽകിയ പേരുകളെ വേർതിരിച്ച് ലിസ്റ്റ് ആക്കുന്നു
+            let subjectsArray = subjectsRaw.split(',').map(s => s.trim()).filter(s => s !== "");
+
+            // ഡാറ്റാബേസിലെ 'settings' കളക്ഷനിൽ സേവ് ചെയ്യുന്നു
+            db.collection('settings').doc(category + '_class_' + classNum).set({
+                subjects: subjectsArray
+            }).then(() => {
+                alert("വിഷയങ്ങൾ വിജയകരമായി സേവ് ചെയ്തു!");
+                document.getElementById('subject-names').value = '';
+            }).catch(error => {
+                alert("എറർ: " + error.message);
+            });
         }
     </script>
 </body>
