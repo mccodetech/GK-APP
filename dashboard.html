@@ -11,12 +11,10 @@
         .level-btn:disabled { background-color: #ccc; cursor: not-allowed; }
         .user-profile { background: #e0f2f1; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* പ്രോഗ്രസ്സ് സർക്കിൾ ടൈമർ */
         .timer-container { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
         .circular-timer { position: relative; width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(#00796b 360deg, #e0e0e0 0deg); display: flex; justify-content: center; align-items: center; }
         .circular-timer span { position: absolute; font-size: 14px; font-weight: bold; color: #333; background: white; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
 
-        /* ചോദ്യങ്ങളുടെ പ്രോഗ്രസ്സ് ബാർ (10 ബോക്സുകൾ) */
         .q-progress-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 15px; }
         .q-dot { width: 25px; height: 8px; background: #e0e0e0; border-radius: 4px; }
         .q-dot.active { background: #ff9800; }
@@ -27,7 +25,7 @@
 <body>
     <div class="container" style="max-width: 650px;">
         
-        <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ (മുകളിൽ) -->
+        <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ -->
         <div class="user-profile">
             <div>
                 <span id="user-icon" style="font-size: 22px;">⭐</span>
@@ -45,7 +43,7 @@
         <!-- പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശം -->
         <div id="intro-box" style="display: none; text-align: center;">
             <h3 id="intro-title">ഘട്ടം</h3>
-            <p>ഈ ഘട്ടത്തിലെ 10 ചോദ്യങ്ങൾക്ക് ഉത്തരം നൽകി വിജയിക്കൂ!</p>
+            <p>ഈ ഘട്ടത്തിലെ 10 ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ വിജയിക്കൂ!</p>
             <button onclick="startActualQuiz()" style="background-color: #0288d1; padding: 12px; font-size: 16px;">പഠനം തുടങ്ങുക (Start Quiz)</button>
             <br>
             <button onclick="location.reload()" class="small-btn" style="background-color: #757575 !important;">തിരികെ പോവുക</button>
@@ -53,10 +51,8 @@
 
         <!-- ക്വിസ് സെക്ഷൻ -->
         <div id="quiz-box" style="display: none; text-align: left;">
-            <!-- 10 ചോദ്യങ്ങളുടെ പ്രോഗ്രസ്സ് ബാർ -->
             <div class="q-progress-bar" id="q-dots-container"></div>
 
-            <!-- വിഷ്വൽ സർക്കുലർ ടൈമർ -->
             <div class="timer-container">
                 <div class="circular-timer" id="timer-circle">
                     <span id="timer-text">20</span>
@@ -158,20 +154,20 @@
         }
 
         const sampleQuestions = [
-            { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answer: 2 },
-            { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answer: 0 },
-            { q: "ആദ്യത്തെ നബി ആര്?", options: ["ഇബ്രാഹിം നബി (അ)", "ആദം നബി (അ)", "മൂസാ നബി (അ)", "മുഹമ്മദ് നബി (സ)"], answer: 1 },
-            { q: "വിശുദ്ധ ഖുർആൻ അവതരിച്ച മാസം?", options: ["റമദാൻ", "മുഹറം", "റബിഉൽ അവ്വൽ", "ശവ്വാൽ"], answer: 0 },
-            { q: "ഇസ്ലാമിക കലണ്ടറിലെ ആദ്യ മാസം?", options: ["സഫർ", "റമദാൻ", "മുഹറം", "റെജബ്"], answer: 2 },
-            { q: "നമ്മുടെ രാജ്യമായ ഇന്ത്യയുടെ തലസ്ഥാനം?", options: ["മുംബൈ", "കൊൽക്കത്ത", "ഡെൽഹി", "ചെന്നൈ"], answer: 2 },
-            { q: "കേരളത്തിന്റെ തലസ്ഥാനം ഏത്?", options: ["കോഴിക്കോട്", "തിരുവനന്തപുരം", "കൊച്ചി", "തൃശ്ശൂർ"], answer: 1 },
-            { q: "ലോകത്തിലെ ഏറ്റവും വലിയ മഹാസമുദ്രം?", options: ["അറ്റ്‌ലാന്റിക്", "ഇന്ത്യൻ മഹാസമുദ്രം", "ആർട്ടിക്", "ശാന്ത സമുദ്രം (Pacific)"], answer: 3 },
-            { q: "സൂര്യൻ ഉദിക്കുന്നത് ഏത് ദിക്കിലാണ്?", options: ["പടിഞ്ഞാറ്", "കിഴക്ക്", "വടക്ക്", "തെക്ക്"], answer: 1 },
-            { q: "കമ്പ്യൂട്ടറിന്റെ പിതാവ് ആര്?", options: ["ചാൾസ് ബാബേജ്", "ആൽബർട്ട് ഐൻസ്റ്റീൻ", "തോമസ് ആൽവ എഡിസൺ", "ഐസക് ന്യൂട്ടൺ"], answer: 0 }
+            { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answerText: "5" },
+            { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answerText: "114" },
+            { q: "ആദ്യത്തെ നബി ആര്?", options: ["ഇബ്രാഹിം നബി (അ)", "ആദം നബി (അ)", "മൂസാ നബി (അ)", "മുഹമ്മദ് നബി (സ)"], answerText: "ആദം നബി (അ)" },
+            { q: "വിശുദ്ധ ഖുർആൻ അവതരിച്ച മാസം?", options: ["റമദാൻ", "മുഹറം", "റബിഉൽ അവ്വൽ", "ശവ്വാൽ"], answerText: "റമദാൻ" },
+            { q: "ഇസ്ലാമിക കലണ്ടറിലെ ആദ്യ മാസം?", options: ["സഫർ", "റമദാൻ", "മുഹറം", "റെജബ്"], answerText: "മുഹറം" },
+            { q: "നമ്മുടെ രാജ്യമായ ഇന്ത്യയുടെ തലസ്ഥാനം?", options: ["മുംബൈ", "കൊൽക്കത്ത", "ഡെൽഹി", "ചെന്നൈ"], answerText: "ഡെൽഹി" },
+            { q: "കേരളത്തിന്റെ തലസ്ഥാനം ഏത്?", options: ["കോഴിക്കോട്", "തിരുവനന്തപുരം", "കൊച്ചി", "തൃശ്ശൂർ"], answerText: "തിരുവനന്തപുരം" },
+            { q: "ലോകത്തിലെ ഏറ്റവും വലിയ മഹാസമുദ്രം?", options: ["അറ്റ്‌ലാന്റിക്", "ഇന്ത്യൻ മഹാസമുദ്രം", "ആർട്ടിക്", "ശാന്ത സമുദ്രം (Pacific)"], answerText: "ശാന്ത സമുദ്രം (Pacific)" },
+            { q: "സൂര്യൻ ഉദിക്കുന്നത് ഏത് ദിക്കിലാണ്?", options: ["പടിഞ്ഞാറ്", "കിഴക്ക്", "വടക്ക്", "തെക്ക്"], answerText: "കിഴക്ക്" },
+            { q: "കമ്പ്യൂട്ടറിന്റെ പിതാവ് ആര്?", options: ["ചാൾസ് ബാബേജ്", "ആൽബർട്ട് ഐൻസ്റ്റീൻ", "തോമസ് ആൽവ എഡിസൺ", "ഐസക് ന്യൂട്ടൺ"], answerText: "ചാൾസ് ബാബേജ്" }
         ];
 
         let timerInterval;
-        let questionStatuses = Array(10).fill(''); // ചോദ്യങ്ങളുടെ അവസ്ഥ ട്രാക്ക് ചെയ്യാൻ
+        let questionStatuses = Array(10).fill('');
 
         function setupDots() {
             const dotsContainer = document.getElementById('q-dots-container');
@@ -181,6 +177,17 @@
                 dot.className = `q-dot ${questionStatuses[i]}`;
                 dotsContainer.appendChild(dot);
             }
+        }
+
+        // ഓപ്ഷനുകൾ ഷഫിൾ ചെയ്യാൻ (Randomize Options)
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
         }
 
         function startActualQuiz() {
@@ -202,6 +209,9 @@
                     let optContainer = document.getElementById('options-container');
                     optContainer.innerHTML = '';
 
+                    // ഓപ്ഷനുകൾ ഷഫിൾ ചെയ്യുന്നു
+                    let shuffledOptions = shuffleArray([...qData.options]);
+
                     let timeLeft = 20;
                     document.getElementById('timer-text').innerText = timeLeft;
                     updateTimerCircle(timeLeft, 20);
@@ -220,13 +230,13 @@
                         }
                     }, 1000);
 
-                    qData.options.forEach((opt, idx) => {
+                    shuffledOptions.forEach((opt) => {
                         let optBtn = document.createElement('button');
                         optBtn.innerText = opt;
                         optBtn.style.backgroundColor = "#00897b";
                         optBtn.onclick = () => {
                             clearInterval(timerInterval);
-                            if (idx === qData.answer) {
+                            if (opt === qData.answerText) {
                                 correctAnswersCount++;
                                 questionStatuses[currentQIndex] = 'correct';
                             } else {
@@ -256,15 +266,16 @@
             let percentage = (scoreCount / total) * 100;
             const quizBox = document.getElementById('quiz-box');
 
-            if (percentage >= 90) {
+            // 100% മാർക്ക് (10/10) നേടിയാൽ മാത്രമേ അടുത്ത ലെവലിലേക്ക് പോകാൻ പാടൂ
+            if (scoreCount === total) {
                 let nextLevel = (levelNum >= userCurrentLevel) ? levelNum + 1 : userCurrentLevel;
                 quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ വിജയിച്ചു!</h3>
-                                    <p>സ്കോർ: ${scoreCount}/${total} (${percentage}%)</p>
+                                    <p>സ്കോർ: ${scoreCount}/${total} (100%)</p>
                                     <button onclick="location.reload()" style="background:#00796b;">മറ്റ് ഘട്ടങ്ങളിലേക്ക് പോവുക</button>`;
                 updateScoreAndLevel(scoreCount * 5, nextLevel);
             } else {
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
-                                    <p>നിങ്ങൾക്ക് ${percentage}% മാത്രമേ ലഭിച്ചുള്ളൂ. മുന്നോട്ട് പോകാൻ കുറഞ്ഞത് 90% (9 ചോദ്യങ്ങൾ) ശരിയായിരിക്കണം.</p>
+                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. അടുത്ത ഘട്ടത്തിലേക്ക് പോകാൻ 100% (എല്ലാ ചോദ്യങ്ങളും) ശരിയായിരിക്കണം.</p>
                                     <button onclick="location.reload()" style="background:#d32f2f;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
             }
         }
