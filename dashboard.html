@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>പഠന ഡാഷ്‌ബോർഡ് - ക്വിസ്</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 600px;">
+        <h2>വിഷയങ്ങൾ & പഠന ഘട്ടങ്ങൾ</h2>
+        <p id="welcome-user"></p>
+
+        <!-- ലെവൽ സെലക്ഷൻ സെക്ഷൻ -->
+        <div id="level-section">
+            <h3>ഘട്ടങ്ങൾ തിരഞ്ഞെടുക്കുക (Levels 1-10)</h3>
+            <div id="levels-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
+                <!-- ജാവസ്ക്രിപ്റ്റ് വഴി ലെവലുകൾ ഇവിടെ വരും -->
+            </div>
+        </div>
+
+        <!-- ക്വിസ് സെക്ഷൻ (തുടക്കത്തിൽ മറച്ചുവെച്ചിരിക്കുന്നു) -->
+        <div id="quiz-box" style="display: none; text-align: left;">
+            <h3 id="question-title">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
+            <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <!-- സ്കോർ ബോർഡ് സെക്ഷൻ -->
+        <div style="margin-top: 20px;">
+            <h3>ഗ്ലോബൽ സ്കോർ ബോർഡ്</h3>
+            <ul id="scoreboard-list" style="list-style: none; padding: 0; max-height: 150px; overflow-y: auto; text-align: left;">
+                <!-- സ്കോറുകൾ ഇവിടെ അപ്ഡേറ്റ് ആകും -->
+            </ul>
+        </div>
+
+        <button onclick="logout()" style="background-color: #d32f2f; margin-top: 20px;">പുറത്തുപോവുക (Logout)</button>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script>
+        // ഫയർബേസ് കോൺഫിഗറേഷൻ (index.html ലെ കോഡ് തന്നെ ഇവിടെയും നൽകുക)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        const userName = localStorage.getItem('userName');
+        const userPhone = localStorage.getItem('userPhone');
+
+        if (!userPhone) {
+            window.location.href = "index.html"; // ലോഗിൻ ചെയ്തില്ലെങ്കിൽ തിരിച്ചുവിടും
+        } else {
+            document.getElementById('welcome-user').innerText = `സ്വാഗതം, ${userName}!`;
+            loadLevels();
+            loadScoreboard();
+        }
+
+        function loadLevels() {
+            const container = document.getElementById('levels-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= 10; i++) {
+                let btn = document.createElement('button');
+                btn.innerText = `ഘട്ടം (Level) ${i}`;
+                btn.style.backgroundColor = "#00796b";
+                btn.onclick = () => startQuiz(i);
+                container.appendChild(btn);
+            }
+        }
+
+        // ലളിതമായ ക്വിസ് ഉദാഹരണം
+        const sampleQuestions = [
+            { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answer: 2 },
+            { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answer: 0 }
+        ];
+
+        function startQuiz(levelNum) {
+            document.getElementById('level-section').style.display = 'none';
+            const quizBox = document.getElementById('quiz-box');
+            quizBox.style.display = 'block';
+
+            let currentQIndex = 0;
+            let currentScore = 0;
+
+            function showQuestion() {
+                if (currentQIndex < sampleQuestions.length) {
+                    let qData = sampleQuestions[currentQIndex];
+                    document.getElementById('question-title').innerText = `ചോദ്യം ${currentQIndex + 1}: ${qData.q}`;
+                    
+                    let optContainer = document.getElementById('options-container');
+                    optContainer.innerHTML = '';
+
+                    qData.options.forEach((opt, idx) => {
+                        let optBtn = document.createElement('button');
+                        optBtn.innerText = opt;
+                        optBtn.style.backgroundColor = "#00897b";
+                        optBtn.onclick = () => {
+                            if (idx === qData.answer) currentScore += 5;
+                            currentQIndex++;
+                            showQuestion();
+                        };
+                        optContainer.appendChild(optBtn);
+                    });
+                } else {
+                    quizBox.innerHTML = `<h3>ഘട്ടം ${levelNum} പൂർത്തിയായി!</h3><p>നിങ്ങളുടെ സ്കോർ: ${currentScore}</p>`;
+                    updateScoreToDatabase(currentScore);
+                }
+            }
+            showQuestion();
+        }
+
+        async function updateScoreToDatabase(addedScore) {
+            const snapshot = await db.collection('users').where('phone', '==', userPhone).get();
+            snapshot.forEach(doc => {
+                let currentTotal = doc.data().score || 0;
+                db.collection('users').doc(doc.id).update({
+                    score: currentTotal + addedScore
+                });
+            });
+            setTimeout(() => { location.reload(); }, 2000);
+        }
+
+        function loadScoreboard() {
+            const list = document.getElementById('scoreboard-list');
+            db.collection('users').orderBy('score', 'desc').limit(5).get().then(snapshot => {
+                list.innerHTML = '';
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    let li = document.createElement('li');
+                    li.innerText = `👤 ${data.name} - ${data.score} മാർക്ക്`;
+                    li.style.padding = "5px 0";
+                    li.style.borderBottom = "1px solid #ddd";
+                    list.appendChild(li);
+                });
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
