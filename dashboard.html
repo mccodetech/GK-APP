@@ -5,42 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>പഠന ഡാഷ്‌ബോർഡ് - ക്വിസ്</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .timer-box { font-size: 18px; color: #d32f2f; font-weight: bold; margin-bottom: 10px; }
+        .icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+        .icon-btn { font-size: 24px; padding: 10px; cursor: pointer; border: 2px solid #ccc; background: #fff; border-radius: 8px; }
+        .icon-btn.selected { border-color: #00796b; background: #e0f2f1; }
+    </style>
 </head>
 <body>
-    <div class="container" style="max-width: 600px;">
+    <div class="container" style="max-width: 650px;">
         <h2>വിഷയങ്ങൾ & പഠന ഘട്ടങ്ങൾ</h2>
-        <p id="welcome-user"></p>
+        <p id="welcome-user" style="font-weight: bold; color: #00796b;"></p>
+
+        <!-- ഗ്ലോബൽ സ്കോർ ബോർഡ് (മുകളിൽ നൽകിയിരിക്കുന്നു) -->
+        <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🏆 ഗ്ലോബൽ സ്കോർ ബോർഡ്</h3>
+            <ul id="scoreboard-list" style="list-style: none; padding: 0; max-height: 120px; overflow-y: auto; text-align: left; margin: 0;"></ul>
+        </div>
 
         <!-- ലെവൽ സെലക്ഷൻ സെക്ഷൻ -->
         <div id="level-section">
-            <h3>ഘട്ടങ്ങൾ തിരഞ്ഞെടുക്കുക (Levels 1-10)</h3>
-            <div id="levels-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
-                <!-- ജാവസ്ക്രിപ്റ്റ് വഴി ലെവലുകൾ ഇവിടെ വരും -->
+            <h3>ഘട്ടങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
+            <div id="levels-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
+                <!-- ജാവസ്ക്രിപ്റ്റ് വഴി ലെവലുകളും പേരുകളും വരും -->
             </div>
         </div>
 
         <!-- ക്വിസ് സെക്ഷൻ -->
         <div id="quiz-box" style="display: none; text-align: left;">
+            <div id="timer" class="timer-box">സമയം ബാക്കി: 20 സെക്കൻഡ്</div>
             <h3 id="question-title">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
             <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
-        <!-- സ്കോർ ബോർഡ് സെക്ഷൻ -->
-        <div style="margin-top: 20px;">
-            <h3>ഗ്ലോബൽ സ്കോർ ബോർഡ്</h3>
-            <ul id="scoreboard-list" style="list-style: none; padding: 0; max-height: 150px; overflow-y: auto; text-align: left;">
-                <!-- സ്കോറുകൾ ഇവിടെ അപ്ഡേറ്റ് ആകും -->
-            </ul>
-        </div>
-
-        <button onclick="logout()" style="background-color: #d32f2f; margin-top: 20px;">പുറത്തുപോവുക (Logout)</button>
+        <button onclick="logout()" style="background-color: #d32f2f; margin-top: 15px;">പുറത്തുപോവുക (Logout)</button>
     </div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script>
-        // Firebase കോൺഫിഗറേഷൻ (നിങ്ങൾ നൽകിയ വിവരങ്ങൾ)
         const firebaseConfig = {
             apiKey: "AIzaSyDxKaF7sFUCsbcyZ9FkQxZtpvBL5Ga-yew",
             authDomain: "gk-app-2274e.firebaseapp.com",
@@ -63,26 +67,52 @@
             window.location.href = "index.html";
         } else {
             document.getElementById('welcome-user').innerText = `സ്വാഗതം, ${userName}!`;
-            loadLevels();
             loadScoreboard();
+            loadLevels();
         }
+
+        // ഘട്ടങ്ങളുടെ പേരുകൾ (Levels & Names)
+        const levelNames = [
+            "ഘട്ടം 1: അടിസ്ഥാന പാഠങ്ങൾ (Basics)",
+            "ഘട്ടം 2: പ്രാരംഭ ജ്ഞാനം (Beginner GK)",
+            "ഘട്ടം 3: മദ്രസ വിജ്ഞാനീയം (Madrasa Basics)",
+            "ഘട്ടം 4: ചരിത്ര വഴികളിലൂടെ (History)",
+            "ഘട്ടം 5: ഇസ്ലാമിക ചരിത്രം (Islamic History)",
+            "ഘട്ടം 6: ശാസ്ത്രവും പ്രകൃതിയും (Science)",
+            "ഘട്ടം 7: ഖുർആൻ പഠനങ്ങൾ (Quranic Studies)",
+            "ഘട്ടം 8: ഹദീസ് വിശേഷങ്ങൾ (Hadith)",
+            "ഘട്ടം 9: ഉന്നത നിലവാരം (Advanced GK)",
+            "ഘട്ടം 10: ഗ്രാൻഡ് ഫിനാലെ (Grand Finale)"
+        ];
 
         function loadLevels() {
             const container = document.getElementById('levels-container');
             container.innerHTML = '';
-            for (let i = 1; i <= 10; i++) {
+            levelNames.forEach((name, index) => {
+                let levelNum = index + 1;
                 let btn = document.createElement('button');
-                btn.innerText = `ഘട്ടം (Level) ${i}`;
+                btn.innerText = name;
                 btn.style.backgroundColor = "#00796b";
-                btn.onclick = () => startQuiz(i);
+                btn.onclick = () => startQuiz(levelNum);
                 container.appendChild(btn);
-            }
+            });
         }
 
+        // മാതൃകാ ചോദ്യങ്ങൾ (ഓരോ ലെവലിലും 10 ചോദ്യങ്ങൾ വീതം വരാവുന്ന രീതിയിൽ)
         const sampleQuestions = [
             { q: "ഇസ്‌ലാമിന്റെ അടിസ്ഥാനസ്തംഭങ്ങൾ എത്ര?", options: ["3", "4", "5", "6"], answer: 2 },
-            { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answer: 0 }
+            { q: "ഖുർആനിലെ ആകെ അധ്യായങ്ങൾ എത്ര?", options: ["114", "110", "120", "100"], answer: 0 },
+            { q: "ആദ്യത്തെ നബി ആര്?", options: ["ഇബ്രാഹിം നബി (അ)", "ആദം നബി (അ)", "മൂസാ നബി (അ)", "മുഹമ്മദ് നബി (സ)"], answer: 1 },
+            { q: "വിശുദ്ധ ഖുർആൻ അവതരിച്ച മാസം?", options: ["റമദാൻ", "മുഹറം", "റബിഉൽ അവ്വൽ", "ശവ്വാൽ"], answer: 0 },
+            { q: "ഇസ്ലാമിക കലണ്ടറിലെ ആദ്യ മാസം?", options: ["സഫർ", "റമദാൻ", "മുഹറം", "റെജബ്"], answer: 2 },
+            { q: "നമ്മുടെ രാജ്യമായ ഇന്ത്യയുടെ തലസ്ഥാനം?", options: ["മുംബൈ", "കൊൽക്കത്ത", "ഡെൽഹി", "ചെന്നൈ"], answer: 2 },
+            { q: "കേരളത്തിന്റെ തലസ്ഥാനം ഏത്?", options: ["കോഴിക്കോട്", "തിരുവനന്തപുരം", "കൊച്ചി", "തൃശ്ശൂർ"], answer: 1 },
+            { q: "ലോകത്തിലെ ഏറ്റവും വലിയ മഹാസമുദ്രം?", options: ["അറ്റ്‌ലാന്റിക്", "ഇന്ത്യൻ മഹാസമുദ്രം", "ആർട്ടിക്", "ശാന്ത സമുദ്രം (Pacific)"], answer: 3 },
+            { q: "സൂര്യൻ ഉദിക്കുന്നത് ഏത് ദിക്കിലാണ്?", options: ["പടിഞ്ഞാറ്", "കിഴക്ക്", "വടക്ക്", "തെക്ക്"], answer: 1 },
+            { q: "കമ്പ്യൂട്ടറിന്റെ പിതാവ് ആര്?", options: ["ചാൾസ് ബാബേജ്", "ആൽബർട്ട് ഐൻസ്റ്റീൻ", "തോമസ് ആൽവ എഡിസൺ", "ഐസക് ന്യൂട്ടൺ"], answer: 0 }
         ];
+
+        let timerInterval;
 
         function startQuiz(levelNum) {
             document.getElementById('level-section').style.display = 'none';
@@ -90,33 +120,71 @@
             quizBox.style.display = 'block';
 
             let currentQIndex = 0;
-            let currentScore = 0;
+            let correctAnswersCount = 0;
+            const totalQuestions = sampleQuestions.length; // 10 ചോദ്യങ്ങൾ
 
             function showQuestion() {
-                if (currentQIndex < sampleQuestions.length) {
+                if (currentQIndex < totalQuestions) {
                     let qData = sampleQuestions[currentQIndex];
-                    document.getElementById('question-title').innerText = `ചോദ്യം ${currentQIndex + 1}: ${qData.q}`;
+                    document.getElementById('question-title').innerText = `ചോദ്യം ${currentQIndex + 1}/10: ${qData.q}`;
                     
                     let optContainer = document.getElementById('options-container');
                     optContainer.innerHTML = '';
 
-                    qData.options.forEach((opt, idx) => {
+                    // 20 സെക്കൻഡ് ടൈമർ സെറ്റ് ചെയ്യുന്നു
+                    let timeLeft = 20;
+                    document.getElementById('timer').innerText = `സമയം ബാക്കി: ${timeLeft} സെക്കൻഡ്`;
+                    
+                    clearInterval(timerInterval);
+                    timerInterval = setInterval(() => {
+                        timeLeft--;
+                        document.getElementById('timer').innerText = `സമയം ബാക്കി: ${timeLeft} സെക്കൻഡ്`;
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            currentQIndex++;
+                            showQuestion(); // സമയം തീർന്നാൽ അടുത്ത ചോദ്യത്തിലേക്ക്
+                        }
+                    }, 1000);
+
+                    qData.options.options || qData.options.forEach((opt, idx) => {
                         let optBtn = document.createElement('button');
                         optBtn.innerText = opt;
                         optBtn.style.backgroundColor = "#00897b";
                         optBtn.onclick = () => {
-                            if (idx === qData.answer) currentScore += 5;
+                            clearInterval(timerInterval);
+                            if (idx === qData.answer) {
+                                correctAnswersCount++;
+                            }
                             currentQIndex++;
                             showQuestion();
                         };
                         optContainer.appendChild(optBtn);
                     });
                 } else {
-                    quizBox.innerHTML = `<h3>ഘട്ടം ${levelNum} പൂർത്തിയായി!</h3><p>നിങ്ങളുടെ സ്കോർ: ${currentScore}</p>`;
-                    updateScoreToDatabase(currentScore);
+                    clearInterval(timerInterval);
+                    evaluateResult(levelNum, correctAnswersCount, totalQuestions);
                 }
             }
             showQuestion();
+        }
+
+        function evaluateResult(levelNum, scoreCount, total) {
+            let percentage = (scoreCount / total) * 100;
+            const quizBox = document.getElementById('quiz-box');
+
+            if (percentage >= 90) {
+                // 90% അല്ലെങ്കിൽ അതിൽ കൂടുതൽ മാർക്ക് നേടിയാൽ വിജയം
+                quizboxHtml = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ വിജയിച്ചു!</h3>
+                               <p>സ്കോർ: ${scoreCount}/${total} (${percentage}%)</p>
+                               <button onclick="location.reload()" style="background:#00796b;">മറ്റ് ഘട്ടങ്ങളിലേക്ക് പോവുക</button>`;
+                updateScoreToDatabase(scoreCount * 5); // ഓരോ ശരിക്കും 5 മാർക്ക് വെച്ച്
+            } else {
+                // 90% ൽ താഴെയാണെങ്കിൽ തോറ്റു, വീണ്ടും ശ്രമിക്കണം
+                quizboxHtml = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
+                               <p>നിങ്ങൾക്ക് ${percentage}% മാത്രമേ ലഭിച്ചുള്ളൂ. മുന്നോട്ട് പോകാൻ കുറഞ്ഞത് 90% (9 ചോദ്യങ്ങൾ) ശരിയായിരിക്കണം.</p>
+                               <button onclick="location.reload()" style="background:#d32f2f;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
+            }
+            quizBox.innerHTML = quizboxHtml;
         }
 
         async function updateScoreToDatabase(addedScore) {
@@ -127,7 +195,6 @@
                     score: currentTotal + addedScore
                 });
             });
-            setTimeout(() => { location.reload(); }, 2000);
         }
 
         function loadScoreboard() {
@@ -137,8 +204,8 @@
                 snapshot.forEach(doc => {
                     let data = doc.data();
                     let li = document.createElement('li');
-                    li.innerText = `👤 ${data.name} - ${data.score} മാർക്ക്`;
-                    li.style.padding = "5px 0";
+                    li.innerText = `⭐ ${data.name} - ${data.score || 0} മാർക്ക്`;
+                    li.style.padding = "4px 0";
                     li.style.borderBottom = "1px solid #ddd";
                     list.appendChild(li);
                 });
