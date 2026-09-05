@@ -27,7 +27,7 @@
         <div id="level-section">
             <h3>ഘട്ടങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
             <div id="levels-container" style="max-height: 250px; overflow-y: auto;">
-                <!-- ലെവൽ ബട്ടണുകൾ ഇവിടെ ഓട്ടോമാറ്റിക്കായി വരും -->
+                <!-- ലെവൽ ബട്ടണുകൾ ഇവിടെ വരും -->
             </div>
         </div>
 
@@ -63,14 +63,7 @@
         const userName = localStorage.getItem('userName');
         const userPhone = localStorage.getItem('userPhone');
 
-        if (!userPhone) {
-            window.location.href = "index.html";
-        } else {
-            document.getElementById('welcome-user').innerText = `സ്വാഗതം, ${userName}!`;
-            loadScoreboard();
-            loadLevels();
-        }
-
+        // ഘട്ടങ്ങളുടെ പേരുകൾ ആദ്യം തന്നെ ഡിക്യേർ ചെയ്യുന്നു
         const levelNames = [
             "ഘട്ടം 1: അടിസ്ഥാന പാഠങ്ങൾ (Basics)",
             "ഘട്ടം 2: പ്രാരംഭ ജ്ഞാനം (Beginner GK)",
@@ -83,6 +76,14 @@
             "ഘട്ടം 9: ഉന്നത നിലവാരം (Advanced GK)",
             "ഘട്ടം 10: ഗ്രാൻഡ് ഫിനാലെ (Grand Finale)"
         ];
+
+        if (!userPhone) {
+            window.location.href = "index.html";
+        } else {
+            document.getElementById('welcome-user').innerText = `സ്വാഗതം, ${userName}!`;
+            loadScoreboard();
+            loadLevels();
+        }
 
         function loadLevels() {
             const container = document.getElementById('levels-container');
