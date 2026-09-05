@@ -1,11 +1,12 @@
-// Firebase കോൺഫിഗറേഷൻ (നിങ്ങളുടെ ഫയർബേസ് പ്രൊജക്റ്റ് ഡാറ്റ ഇവിടെ നൽകുക)
+// Firebase കോൺഫിഗറേഷൻ (നിങ്ങൾ നൽകിയ വിവരങ്ങൾ)
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDxKaF7sFUCsbcyZ9FkQxZtpvBL5Ga-yew",
+    authDomain: "gk-app-2274e.firebaseapp.com",
+    projectId: "gk-app-2274e",
+    storageBucket: "gk-app-2274e.firebasestorage.app",
+    messagingSenderId: "249982405152",
+    appId: "1:249982405152:web:dd441a778ab94d86078a45",
+    measurementId: "G-50X2DDE274"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -21,12 +22,10 @@ async function handleLoginRegister() {
         return;
     }
 
-    // യൂസർ ഡാറ്റാബേസിൽ ഉണ്ടോ എന്ന് പരിശോധിക്കുന്നു
     const usersRef = db.collection('users');
     const snapshot = await usersRef.where('phone', '==', phone).get();
 
     if (snapshot.empty) {
-        // പുതിയ യൂസർ രജിസ്ട്രേഷൻ (സ്റ്റാറ്റസ്: pending)
         if (!name) {
             messageBox.innerText = "പുതിയ യൂസറാണ്, ദയവായി പേര് കൂടി നൽകുക!";
             return;
@@ -43,7 +42,6 @@ async function handleLoginRegister() {
         messageBox.style.color = "#00796b";
         messageBox.innerText = "രജിസ്ട്രേഷൻ വിജയകരമായി! അഡ്മിന്റെ അപ്പ്രൂവലിനായി കാത്തിരിക്കുക.";
     } else {
-        // നിലവിലുള്ള യൂസർ
         let userData = null;
         snapshot.forEach(doc => {
             userData = doc.data();
@@ -55,7 +53,7 @@ async function handleLoginRegister() {
             localStorage.setItem('userPhone', phone);
             localStorage.setItem('userName', userData.name);
             setTimeout(() => {
-                window.location.href = "dashboard.html"; // അടുത്ത പേജ്
+                window.location.href = "dashboard.html";
             }, 1000);
         } else {
             messageBox.style.color = "#d32f2f";
