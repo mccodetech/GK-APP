@@ -8,6 +8,8 @@
     <style>
         .timer-box { font-size: 18px; color: #d32f2f; font-weight: bold; margin-bottom: 10px; }
         .small-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #d32f2f !important; margin-top: 15px; }
+        .level-btn { width: 100%; padding: 12px; background-color: #00796b; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; text-align: left; margin-bottom: 8px; }
+        .level-btn:hover { background-color: #004d40; }
     </style>
 </head>
 <body>
@@ -24,8 +26,8 @@
         <!-- ലെവൽ സെലക്ഷൻ സെക്ഷൻ -->
         <div id="level-section">
             <h3>ഘട്ടങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
-            <div id="levels-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
-                <!-- ജാവസ്ക്രിപ്റ്റ് വഴി ലെവലുകൾ ഇവിടെ വരും -->
+            <div id="levels-container" style="max-height: 250px; overflow-y: auto;">
+                <!-- ലെവൽ ബട്ടണുകൾ ഇവിടെ ഓട്ടോമാറ്റിക്കായി വരും -->
             </div>
         </div>
 
@@ -89,12 +91,7 @@
                 let levelNum = index + 1;
                 let btn = document.createElement('button');
                 btn.innerText = name;
-                btn.style.backgroundColor = "#00796b";
-                btn.style.padding = "10px";
-                btn.style.color = "white";
-                btn.style.border = "none";
-                btn.style.borderRadius = "5px";
-                btn.style.cursor = "pointer";
+                btn.className = 'level-btn';
                 btn.onclick = () => startQuiz(levelNum);
                 container.appendChild(btn);
             });
