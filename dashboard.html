@@ -9,26 +9,36 @@
         .timer-box { font-size: 18px; color: #d32f2f; font-weight: bold; margin-bottom: 10px; }
         .small-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #d32f2f !important; margin-top: 15px; }
         .level-btn { width: 100%; padding: 12px; background-color: #00796b; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; text-align: left; margin-bottom: 8px; }
-        .level-btn:hover { background-color: #004d40; }
+        .level-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        .user-profile { background: #e0f2f1; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
     <div class="container" style="max-width: 650px;">
         <h2>വിഷയങ്ങൾ & പഠന ഘട്ടങ്ങൾ</h2>
-        <p id="welcome-user" style="font-weight: bold; color: #00796b;"></p>
-
-        <!-- ഗ്ലോബൽ സ്കോർ ബോർഡ് -->
-        <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-            <h3 style="margin: 0 0 10px 0; font-size: 16px;">🏆 ഗ്ലോബൽ സ്കോർ ബോർഡ്</h3>
-            <ul id="scoreboard-list" style="list-style: none; padding: 0; max-height: 120px; overflow-y: auto; text-align: left; margin: 0;"></ul>
+        
+        <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ (മുകളിൽ) -->
+        <div class="user-profile">
+            <div>
+                <span id="user-icon" style="font-size: 24px;">⭐</span>
+                <span id="welcome-user" style="font-weight: bold; color: #00796b; font-size: 16px;"></span>
+            </div>
+            <div id="user-score-display" style="font-weight: bold; color: #333;">സ്കോർ: 0</div>
         </div>
 
         <!-- ലെവൽ സെലക്ഷൻ സെക്ഷൻ -->
         <div id="level-section">
             <h3>ഘട്ടങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
-            <div id="levels-container" style="max-height: 250px; overflow-y: auto;">
-                <!-- ലെവൽ ബട്ടണുകൾ ഇവിടെ വരും -->
-            </div>
+            <div id="levels-container" style="max-height: 250px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശവും പ്രിവ്യൂവും -->
+        <div id="intro-box" style="display: none; text-align: center;">
+            <h3 id="intro-title">ഘട്ടം</h3>
+            <p>ഈ ഘട്ടത്തിലെ 10 ചോദ്യങ്ങൾക്ക് ഉത്തരം നൽകി വിജയിക്കൂ!</p>
+            <button onclick="startActualQuiz()" style="background-color: #0288d1; padding: 12px; font-size: 16px;">പഠനം തുടങ്ങുക (Start Quiz)</button>
+            <br>
+            <button onclick="location.reload()" class="small-btn" style="background-color: #757575 !important;">തിരികെ പോവുക</button>
         </div>
 
         <!-- ക്വിസ് സെക്ഷൻ -->
@@ -63,7 +73,10 @@
         const userName = localStorage.getItem('userName');
         const userPhone = localStorage.getItem('userPhone');
 
-        // ഘട്ടങ്ങളുടെ പേരുകൾ ആദ്യം തന്നെ ഡിക്യേർ ചെയ്യുന്നു
+        let userCurrentLevel = 1;
+        let userScore = 0;
+        let selectedLevel = 1;
+
         const levelNames = [
             "ഘട്ടം 1: അടിസ്ഥാന പാഠങ്ങൾ (Basics)",
             "ഘട്ടം 2: പ്രാരംഭ ജ്ഞാനം (Beginner GK)",
@@ -80,9 +93,22 @@
         if (!userPhone) {
             window.location.href = "index.html";
         } else {
-            document.getElementById('welcome-user').innerText = `സ്വാഗതം, ${userName}!`;
-            loadScoreboard();
-            loadLevels();
+            fetchUserData();
+        }
+
+        function fetchUserData() {
+            db.collection('users').where('phone', '==', userPhone).get().then(snapshot => {
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    userNameFromDb = data.name;
+                    userScore = data.score || 0;
+                    userCurrentLevel = data.currentLevel || 1;
+
+                    document.getElementById('welcome-user').innerText = `${userNameFromDb}`;
+                    document.getElementById('user-score-display').innerText = `സ്കോർ: ${userScore}`;
+                    loadLevels();
+                });
+            });
         }
 
         function loadLevels() {
@@ -93,9 +119,23 @@
                 let btn = document.createElement('button');
                 btn.innerText = name;
                 btn.className = 'level-btn';
-                btn.onclick = () => startQuiz(levelNum);
+                
+                // കുട്ടിക്ക് എത്താൻ കഴിഞ്ഞ ലെവലുകൾ മാത്രം തുറക്കുക, മറ്റുള്ളവ ലോക്ക് ചെയ്യുക
+                if (levelNum > userCurrentLevel) {
+                    btn.disabled = true;
+                    btn.innerText += " 🔒";
+                } else {
+                    btn.onclick = () => showIntro(levelNum);
+                }
                 container.appendChild(btn);
             });
+        }
+
+        function showIntro(levelNum) {
+            selectedLevel = levelNum;
+            document.getElementById('level-section').style.display = 'none';
+            document.getElementById('intro-box').style.display = 'block';
+            document.getElementById('intro-title').innerText = levelNames[levelNum - 1];
         }
 
         const sampleQuestions = [
@@ -113,8 +153,8 @@
 
         let timerInterval;
 
-        function startQuiz(levelNum) {
-            document.getElementById('level-section').style.display = 'none';
+        function startActualQuiz() {
+            document.getElementById('intro-box').style.display = 'none';
             const quizBox = document.getElementById('quiz-box');
             quizBox.style.display = 'block';
 
@@ -160,7 +200,7 @@
                     });
                 } else {
                     clearInterval(timerInterval);
-                    evaluateResult(levelNum, correctAnswersCount, totalQuestions);
+                    evaluateResult(selectedLevel, correctAnswersCount, totalQuestions);
                 }
             }
             showQuestion();
@@ -171,10 +211,12 @@
             const quizBox = document.getElementById('quiz-box');
 
             if (percentage >= 90) {
+                // വിജയിച്ചാൽ അടുത്ത ലെവൽ അൺലോക്ക് ചെയ്യും
+                let nextLevel = (levelNum >= userCurrentLevel) ? levelNum + 1 : userCurrentLevel;
                 quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ വിജയിച്ചു!</h3>
                                     <p>സ്കോർ: ${scoreCount}/${total} (${percentage}%)</p>
                                     <button onclick="location.reload()" style="background:#00796b;">മറ്റ് ഘട്ടങ്ങളിലേക്ക് പോവുക</button>`;
-                updateScoreToDatabase(scoreCount * 5);
+                updateScoreAndLevel(scoreCount * 5, nextLevel);
             } else {
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
                                     <p>നിങ്ങൾക്ക് ${percentage}% മാത്രമേ ലഭിച്ചുള്ളൂ. മുന്നോട്ട് പോകാൻ കുറഞ്ഞത് 90% (9 ചോദ്യങ്ങൾ) ശരിയായിരിക്കണം.</p>
@@ -182,27 +224,15 @@
             }
         }
 
-        async function updateScoreToDatabase(addedScore) {
+        async function updateScoreAndLevel(addedScore, newLevel) {
             const snapshot = await db.collection('users').where('phone', '==', userPhone).get();
             snapshot.forEach(doc => {
                 let currentTotal = doc.data().score || 0;
+                let currentMaxLevel = doc.data().currentLevel || 1;
+                
                 db.collection('users').doc(doc.id).update({
-                    score: currentTotal + addedScore
-                });
-            });
-        }
-
-        function loadScoreboard() {
-            const list = document.getElementById('scoreboard-list');
-            db.collection('users').orderBy('score', 'desc').limit(5).get().then(snapshot => {
-                list.innerHTML = '';
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    let li = document.createElement('li');
-                    li.innerText = `⭐ ${data.name} - ${data.score || 0} മാർക്ക്`;
-                    li.style.padding = "4px 0";
-                    li.style.borderBottom = "1px solid #ddd";
-                    list.appendChild(li);
+                    score: currentTotal + addedScore,
+                    currentLevel: newLevel > currentMaxLevel ? newLevel : currentMaxLevel
                 });
             });
         }
