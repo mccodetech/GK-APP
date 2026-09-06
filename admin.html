@@ -53,11 +53,32 @@
                 </div>
             </div>
 
-            <!-- പഴയ ചോദ്യങ്ങൾ മുഴുവൻ ഡിലീറ്റ് ചെയ്യാനുള്ള മാസ്റ്റർ ബട്ടൺ -->
-            <div class="admin-section" style="background: #ffebee; border-color: #ffcdd2; text-align: center;">
-                <h3 style="color: #c62828; margin-top: 0;">⚠️ ഡാറ്റാബേസ് ക്ലീൻ ചെയ്യാം</h3>
-                <p style="font-size: 13px; color: #555;">പഴയ ചോദ്യങ്ങൾ മാറ്റി പുതിയ പാഠങ്ങൾ ചേർക്കാനായി ഡാറ്റാബേസിലെ മുഴുവൻ ചോദ്യങ്ങളും ഒറ്റയടിക്ക് നീക്കം ചെയ്യാം.</p>
-                <button onclick="deleteAllQuestions()" style="background-color: #d32f2f; padding: 10px 20px; color:white; border:none; border-radius:5px; cursor:pointer; font-weight: bold;">എല്ലാ ചോദ്യങ്ങളും ഡിലീറ്റ് ചെയ്യുക (Delete All Questions)</button>
+            <!-- ഒരു നിശ്ചിത വിഷയത്തിലെ ചോദ്യങ്ങൾ മാത്രം ഡിലീറ്റ് ചെയ്യാൻ (Smart Delete) -->
+            <div class="admin-section" style="background: #ffebee; border-color: #ffcdd2;">
+                <h3 style="color: #c62828; margin-top: 0;">⚠️ നിശ്ചിത വിഷയം മാത്രം ക്ലീൻ ചെയ്യാം (Smart Delete)</h3>
+                <div class="row-group">
+                    <div class="input-group">
+                        <label>വിഭാഗം:</label>
+                        <select id="del-category" onchange="updateDelDropdowns()">
+                            <option value="madrasa">മദ്രസ</option>
+                            <option value="school">സ്കൂൾ</option>
+                            <option value="gk">GK & Current Affairs</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="del-class-div">
+                        <label>ക്ലാസ്സ്:</label>
+                        <select id="del-class" onchange="loadDelSubjects()">
+                            <option value="1">ക്ലാസ്സ് 1</option><option value="2">ക്ലാസ്സ് 2</option><option value="3">ക്ലാസ്സ് 3</option>
+                            <option value="4">ക്ലാസ്സ് 4</option><option value="5">ക്ലാസ്സ് 5</option><option value="6">ക്ലാസ്സ് 6</option>
+                            <option value="7">ക്ലാസ്സ് 7</option><option value="8">ക്ലാസ്സ് 8</option><option value="9">ക്ലാസ്സ് 9</option><option value="10">ക്ലാസ്സ് 10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>വിഷയം തിരഞ്ഞെടുക്കുക:</label>
+                    <select id="del-subject"></select>
+                </div>
+                <button onclick="deleteSubjectQuestions()" style="background-color: #d32f2f; padding: 10px 20px; color:white; border:none; border-radius:5px; cursor:pointer; font-weight: bold; width: 100%;">ഈ വിഷയത്തിലുള്ള ചോദ്യങ്ങൾ മാത്രം ഡിലീറ്റ് ചെയ്യുക</button>
             </div>
 
             <div class="admin-section">
@@ -264,22 +285,27 @@
                 loadImpSubjects();
                 loadManSubjects();
                 loadMngSubjects();
+                loadDelSubjects();
                 fetchExistingSubjects();
             } else {
                 alert("തെറ്റായ യൂസർനെയിം അല്ലെങ്കിൽ പാസ്‌വേർഡ്!");
             }
         }
 
-        // എല്ലാ ചോദ്യങ്ങളും ഒറ്റയടിക്ക് ഡിലീറ്റ് ചെയ്യാനുള്ള ഫങ്ക്ഷൻ
-        function deleteAllQuestions() {
-            if(confirm("⚠️ മുന്നറിയിപ്പ്: ഡാറ്റാബേസിലുള്ള മുഴുവൻ ചോദ്യങ്ങളും ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?")) {
-                db.collection('questions').get().then(snapshot => {
+        // തിരഞ്ഞെടുത്ത വിഷയത്തിലെ ചോദ്യങ്ങൾ മാത്രം ഡിലീറ്റ് ചെയ്യാൻ
+        function deleteSubjectQuestions() {
+            let subjectName = document.getElementById('del-subject').value;
+            if(!subjectName) { alert("ദയവായി വിഷയം തിരഞ്ഞെടുക്കുക!"); return; }
+
+            if(confirm(`⚠️ മുന്നറിയിപ്പ്: '${subjectName}' എന്ന വിഷയത്തിലുള്ള മുഴുവൻ ചോദ്യങ്ങളും ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?`)) {
+                db.collection('questions').where('subject', '==', subjectName).get().then(snapshot => {
+                    if(snapshot.empty) { alert("ഈ വിഷയത്തിൽ ചോദ്യങ്ങൾ ഒന്നും ലഭ്യമല്ല."); return; }
                     let batch = db.batch();
                     snapshot.forEach(doc => {
                         batch.delete(doc.ref);
                     });
                     batch.commit().then(() => {
-                        alert("മുഴുവൻ ചോദ്യങ്ങളും വിജയകരമായി ഡിലീറ്റ് ചെയ്തു!");
+                        alert(`'${subjectName}' വിഷയത്തിലെ മുഴുവൻ ചോദ്യങ്ങളും വിജയകരമായി ഡിലീറ്റ് ചെയ്തു!`);
                         loadDashboardStats();
                         loadQuestionsForManagement();
                     });
@@ -324,7 +350,6 @@
 
             allQuestionsCache.forEach(q => {
                 let sec = q.section || '';
-                let lessonNo = q.lesson || 1;
                 if(sec.startsWith('madrasa')) {
                     madrasaTotal++;
                     let cls = sec.replace('madrasa_', 'ക്ലാസ്സ് ');
@@ -394,6 +419,11 @@
             document.getElementById('mng-class-div').style.display = (cat === 'gk') ? 'none' : 'block';
             loadMngSubjects();
         }
+        function updateDelDropdowns() {
+            let cat = document.getElementById('del-category').value;
+            document.getElementById('del-class-div').style.display = (cat === 'gk') ? 'none' : 'block';
+            loadDelSubjects();
+        }
 
         function loadSubjectsToDropdown(catId, classId, dropdownId) {
             let cat = document.getElementById(catId).value;
@@ -423,6 +453,7 @@
         function loadImpSubjects() { loadSubjectsToDropdown('imp-category', 'imp-class', 'q-subject-name'); }
         function loadManSubjects() { loadSubjectsToDropdown('man-category', 'man-class', 'manual-subject'); }
         function loadMngSubjects() { loadSubjectsToDropdown('mng-category', 'mng-class', 'search-subject'); }
+        function loadDelSubjects() { loadSubjectsToDropdown('del-category', 'del-class', 'del-subject'); }
 
         function saveSubjects() {
             let category = document.getElementById('sub-category').value;
@@ -439,7 +470,7 @@
                 alert("വിഷയങ്ങൾ വിജയകരമായി ചേർത്തു!");
                 document.getElementById('subject-names').value = '';
                 fetchExistingSubjects();
-                loadImpSubjects(); loadManSubjects(); loadMngSubjects();
+                loadImpSubjects(); loadManSubjects(); loadMngSubjects(); loadDelSubjects();
             }).catch(err => {
                 alert("എറർ: " + err);
             });
@@ -593,8 +624,8 @@
             });
         }
 
-        function editQuestion(id, sub, lesson, q, o1, o2, o3, o4) {
-            document.getElementById('edit-doc-id').value = id;
+        function editQuestion(actionId, sub, lesson, q, o1, o2, o3, o4) {
+            document.getElementById('edit-doc-id').value = actionId;
             document.getElementById('manual-subject').value = sub;
             document.getElementById('manual-lesson').value = lesson;
             document.getElementById('manual-q').value = q;
