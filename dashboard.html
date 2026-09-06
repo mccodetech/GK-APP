@@ -141,7 +141,7 @@
 
         let userScore = 0;
         let activeQuestions = [];
-        let rawLessonQuestions = []; // ഒറിജിനൽ ചോദ്യങ്ങൾ സൂക്ഷിക്കാൻ
+        let rawLessonQuestions = [];
         let userDocId = "";
         let userDataObj = {};
         let currentSelectedSubject = "";
@@ -334,7 +334,6 @@
             document.getElementById('intro-box').style.display = 'block';
             document.getElementById('intro-title').innerText = currentLessonTitle;
             
-            // ചോദ്യങ്ങൾ ഷഫിൾ ചെയ്ത് പരമാവധി 10 എണ്ണം മാത്രം എടുക്കുന്നു
             let shuffled = shuffleArray([...rawLessonQuestions]);
             activeQuestions = shuffled.slice(0, 10);
         }
@@ -445,11 +444,19 @@
                 
                 updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
             } else {
+                // 'വീണ്ടും ശ്രമിക്കുക' ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇൻട്രോയിലേക്ക് പോകാതെ നേരിട്ട് പുതിയ ചോദ്യങ്ങൾ എടുത്തു ക്വിസ് തുടങ്ങാൻ 'restartQuiz()' വെച്ചിരിക്കുന്നു
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
                                     <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
-                                    <button onclick="prepareQuiz()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer; margin-right: 5px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
+                                    <button onclick="restartQuiz()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer; margin-right: 5px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
                                     <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
             }
+        }
+
+        // വീണ്ടും ശ്രമിക്കുമ്പോൾ ഇൻട്രോ ഒഴിവാക്കി നേരിട്ട് ക്വിസ് സ്റ്റാർട്ട് ചെയ്യാൻ
+        function restartQuiz() {
+            let shuffled = shuffleArray([...rawLessonQuestions]);
+            activeQuestions = shuffled.slice(0, 10);
+            startActualQuiz();
         }
 
         async function updateProgressAndScore(subject, lessonNum, addedScore) {
