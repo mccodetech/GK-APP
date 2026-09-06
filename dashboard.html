@@ -25,6 +25,8 @@
         .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; text-align: left; }
         .leaderboard-table th, .leaderboard-table td { border: 1px solid #ddd; padding: 8px; }
         .leaderboard-table th { background-color: #00796b; color: white; }
+        
+        .result-box-container { text-align: center; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -99,7 +101,7 @@
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
         </div>
 
-        <!-- 4. ക്വിസ് സെക്ഷൻ -->
+        <!-- 4. ക്വിസ് സെക്ഷൻ (ചോദ്യങ്ങൾ മാത്രം കാണിക്കാൻ) -->
         <div id="quiz-box" style="display: none; text-align: left;">
             <div class="q-progress-bar" id="q-dots-container"></div>
 
@@ -113,6 +115,11 @@
             <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
             
             <button onclick="goBackToMain()" class="back-btn" style="margin-top: 15px;">പിന്നോട്ട് (Back)</button>
+        </div>
+
+        <!-- 5. റിസൾട്ട് കാണിക്കാനുള്ള പുതിയ സെക്ഷൻ -->
+        <div id="result-box" class="result-box-container" style="display: none;">
+            <!-- റിസൾട്ട് ഇവിടെ ലോഡ് ആകും -->
         </div>
 
         <div style="text-align: center;">
@@ -192,7 +199,7 @@
         }
 
         function selectCategory(category) {
-            document.getElementById('main-category-section').style.display = 'none';
+            hideAllSections();
             const subSection = document.getElementById('sub-category-section');
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
@@ -258,12 +265,12 @@
 
         function showLessonsForSubject(subjectName) {
             currentSelectedSubject = subjectName;
-            const subTitle = document.getElementById('sub-title');
-            const container = document.getElementById('sub-items-container');
-            document.getElementById('quiz-box').style.display = 'none';
-            document.getElementById('intro-box').style.display = 'none';
+            hideAllSections();
             let subSection = document.getElementById('sub-category-section');
             subSection.style.display = 'block';
+
+            const subTitle = document.getElementById('sub-title');
+            const container = document.getElementById('sub-items-container');
 
             subTitle.innerText = `${subjectName} - പാഠങ്ങൾ തിരഞ്ഞെടുക്കുക`;
             container.innerHTML = '<p style="color:#00796b;">പാഠങ്ങൾ പരിശോധിക്കുന്നു...</p>';
@@ -329,8 +336,7 @@
         }
 
         function prepareQuiz() {
-            document.getElementById('sub-category-section').style.display = 'none';
-            document.getElementById('quiz-box').style.display = 'none';
+            hideAllSections();
             document.getElementById('intro-box').style.display = 'block';
             document.getElementById('intro-title').innerText = currentLessonTitle;
             
@@ -363,7 +369,7 @@
         }
 
         function startActualQuiz() {
-            document.getElementById('intro-box').style.display = 'none';
+            hideAllSections();
             document.getElementById('quiz-box').style.display = 'block';
 
             let currentQIndex = 0;
@@ -436,28 +442,30 @@
 
         function evaluateResult(scoreCount, total) {
             let percentage = (scoreCount / total) * 100;
-            const quizBox = document.getElementById('quiz-box');
+            
+            // ക്വിസ് ബോക്സ് മറച്ചുവെച്ച്, റിസൾട്ട് ബോക്സ് കാണിക്കുന്നു
+            document.getElementById('quiz-box').style.display = 'none';
+            const resultBox = document.getElementById('result-box');
+            resultBox.style.display = 'block';
 
             if (scoreCount === total) {
-                quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം വിജയിച്ചു!</h3>
-                                    <p>സ്കോർ: ${scoreCount}/${total} (100%)</p>
-                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">തുടരുക (Next Lessons)</button>`;
+                resultBox.innerHTML = `<h3 style="color: #388e3c;">🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം വിജയിച്ചു!</h3>
+                                    <p style="font-size: 18px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
+                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">തുടരുക (Next Lessons)</button>`;
                 
                 updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
             } else {
-                quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
-                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
-                                    <button onclick="restartQuiz()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer; margin-right: 5px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
-                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
+                resultBox.innerHTML = `<h3 style="color: #d32f2f;">❌ പരാജയപ്പെട്ടു!</h3>
+                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ.<br>ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
+                                    <button onclick="restartQuiz()" style="background:#d32f2f; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer; margin-bottom: 10px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
+                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
             }
         }
 
-        // 'വീണ്ടും ശ്രമിക്കുക' ക്ലിക്ക് ചെയ്യുമ്പോൾ ക്വിസ് ബോക്സ് ഉറപ്പായും വിസിബിൾ ആക്കിക്കൊണ്ട് റീസ്റ്റാർട്ട് ചെയ്യാൻ
+        // വീണ്ടും ശ്രമിക്കുമ്പോൾ
         function restartQuiz() {
             let shuffled = shuffleArray([...rawLessonQuestions]);
             activeQuestions = shuffled.slice(0, 10);
-            document.getElementById('intro-box').style.display = 'none';
-            document.getElementById('quiz-box').style.display = 'block';
             startActualQuiz();
         }
 
@@ -489,7 +497,7 @@
         }
 
         function showLeaderboard() {
-            document.getElementById('main-category-section').style.display = 'none';
+            hideAllSections();
             document.getElementById('leaderboard-section').style.display = 'block';
             let tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">ലോഡ് ചെയ്യുന്നു...</td></tr>';
@@ -520,14 +528,20 @@
             });
         }
 
-        function goBackToMain() {
+        function hideAllSections() {
+            document.getElementById('main-category-section').style.display = 'none';
             document.getElementById('sub-category-section').style.display = 'none';
             document.getElementById('intro-box').style.display = 'none';
             document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('result-box').style.display = 'none';
             document.getElementById('leaderboard-section').style.display = 'none';
             document.getElementById('edit-profile-box').style.display = 'none';
-            document.getElementById('main-category-section').style.display = 'block';
             clearInterval(timerInterval);
+        }
+
+        function goBackToMain() {
+            hideAllSections();
+            document.getElementById('main-category-section').style.display = 'block';
         }
 
         function logout() {
