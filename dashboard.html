@@ -141,9 +141,12 @@
 
         let userScore = 0;
         let activeQuestions = [];
+        let rawLessonQuestions = []; // ഒറിജിനൽ ചോദ്യങ്ങൾ സൂക്ഷിക്കാൻ
         let userDocId = "";
         let userDataObj = {};
         let currentSelectedSubject = "";
+        let currentActiveLesson = 1;
+        let currentLessonTitle = "";
 
         if (!userPhone) window.location.href = "index.html";
         else {
@@ -259,7 +262,7 @@
             const container = document.getElementById('sub-items-container');
             document.getElementById('quiz-box').style.display = 'none';
             document.getElementById('intro-box').style.display = 'none';
-            subSection = document.getElementById('sub-category-section');
+            let subSection = document.getElementById('sub-category-section');
             subSection.style.display = 'block';
 
             subTitle.innerText = `${subjectName} - പാഠങ്ങൾ തിരഞ്ഞെടുക്കുക`;
@@ -296,24 +299,26 @@
         }
 
         function loadQuestionsForLesson(subjectName, lessonNo) {
+            currentActiveLesson = lessonNo;
+            currentLessonTitle = `${subjectName} - പാഠം ${lessonNo}`;
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
-            subTitle.innerText = `${subjectName} - പാഠം ${lessonNo} - ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നു...`;
+            subTitle.innerText = `${currentLessonTitle} - ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നു...`;
             container.innerHTML = '<p style="color:#00796b;">ദയവായി കാത്തിരിക്കുക...</p>';
 
             db.collection('questions').where('subject', '==', subjectName).where('lesson', '==', lessonNo).get().then(snapshot => {
-                let questionsList = [];
+                rawLessonQuestions = [];
                 snapshot.forEach(doc => {
                     let row = doc.data();
-                    questionsList.push({
+                    rawLessonQuestions.push({
                         q: row.Question,
                         options: [row.Option_A, row.Option_B, row.Option_C, row.Option_D],
                         answerText: row.answerText
                     });
                 });
 
-                if(questionsList.length > 0) {
-                    prepareQuiz(`${subjectName} - പാഠം ${lessonNo}`, questionsList, lessonNo);
+                if(rawLessonQuestions.length > 0) {
+                    prepareQuiz();
                 } else {
                     alert("ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
                     showLessonsForSubject(subjectName);
@@ -323,14 +328,15 @@
             });
         }
 
-        let currentActiveLesson = 1;
-
-        function prepareQuiz(title, qList, lessonNo) {
-            currentActiveLesson = lessonNo;
+        function prepareQuiz() {
             document.getElementById('sub-category-section').style.display = 'none';
+            document.getElementById('quiz-box').style.display = 'none';
             document.getElementById('intro-box').style.display = 'block';
-            document.getElementById('intro-title').innerText = title;
-            activeQuestions = shuffleArray([...qList]);
+            document.getElementById('intro-title').innerText = currentLessonTitle;
+            
+            // ചോദ്യങ്ങൾ ഷഫിൾ ചെയ്ത് പരമാവധി 10 എണ്ണം മാത്രം എടുക്കുന്നു
+            let shuffled = shuffleArray([...rawLessonQuestions]);
+            activeQuestions = shuffled.slice(0, 10);
         }
 
         function shuffleArray(array) {
@@ -362,7 +368,7 @@
 
             let currentQIndex = 0;
             let correctAnswersCount = 0;
-            let maxQuestions = activeQuestions.length > 10 ? 10 : activeQuestions.length; 
+            let maxQuestions = activeQuestions.length; 
             questionStatuses = Array(maxQuestions).fill('');
 
             function showQuestion() {
@@ -441,7 +447,8 @@
             } else {
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
                                     <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
-                                    <button onclick="loadQuestionsForLesson('${currentSelectedSubject}', ${currentActiveLesson})" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
+                                    <button onclick="prepareQuiz()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer; margin-right: 5px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
+                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
             }
         }
 
@@ -455,7 +462,6 @@
                     currentProgress[subject] = lessonNum;
                 }
 
-                // റിവിഷൻ ചെയ്യുമ്പോൾ വീണ്ടും സ്കോർ കൂട്ടാതിരിക്കാൻ പുതിയ പാഠം പാസ്സ് ആയാൽ മാത്രം സ്കോർ കൂട്ടുന്നു
                 let newTotalScore = userScore;
                 if(isNewHigher) {
                     newTotalScore = userScore + addedScore;
