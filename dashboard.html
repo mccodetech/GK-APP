@@ -353,6 +353,7 @@
 
         function setupDots(maxQ) {
             const dotsContainer = document.getElementById('q-dots-container');
+            if(!dotsContainer) return;
             dotsContainer.innerHTML = '';
             for(let i=0; i<maxQ; i++) {
                 let dot = document.createElement('div');
@@ -444,7 +445,6 @@
                 
                 updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
             } else {
-                // 'വീണ്ടും ശ്രമിക്കുക' ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇൻട്രോയിലേക്ക് പോകാതെ നേരിട്ട് പുതിയ ചോദ്യങ്ങൾ എടുത്തു ക്വിസ് തുടങ്ങാൻ 'restartQuiz()' വെച്ചിരിക്കുന്നു
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
                                     <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
                                     <button onclick="restartQuiz()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer; margin-right: 5px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
@@ -452,10 +452,12 @@
             }
         }
 
-        // വീണ്ടും ശ്രമിക്കുമ്പോൾ ഇൻട്രോ ഒഴിവാക്കി നേരിട്ട് ക്വിസ് സ്റ്റാർട്ട് ചെയ്യാൻ
+        // 'വീണ്ടും ശ്രമിക്കുക' ക്ലിക്ക് ചെയ്യുമ്പോൾ ക്വിസ് ബോക്സ് ഉറപ്പായും വിസിബിൾ ആക്കിക്കൊണ്ട് റീസ്റ്റാർട്ട് ചെയ്യാൻ
         function restartQuiz() {
             let shuffled = shuffleArray([...rawLessonQuestions]);
             activeQuestions = shuffled.slice(0, 10);
+            document.getElementById('intro-box').style.display = 'none';
+            document.getElementById('quiz-box').style.display = 'block';
             startActualQuiz();
         }
 
