@@ -29,7 +29,6 @@
 <body>
     <div class="container" style="max-width: 650px;">
         
-        <!-- ആപ്പിന്റെ പേര് ഇംഗ്ലീഷിൽ മാത്രം -->
         <h2 style="color: #00796b; margin-top: 0; text-align: center;">Smart Academy</h2>
 
         <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ -->
@@ -38,7 +37,19 @@
                 <span id="user-icon" style="font-size: 22px;">⭐</span>
                 <span id="welcome-user" style="font-weight: bold; color: #00796b; font-size: 16px;"></span>
             </div>
-            <div id="user-score-display" style="font-weight: bold; color: #333;">സ്കോർ: 0</div>
+            <div>
+                <button onclick="openEditProfile()" style="padding: 4px 8px; background: #0288d1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;">പേര് മാറ്റുക</button>
+                <span id="user-score-display" style="font-weight: bold; color: #333;">സ്കോർ: 0</span>
+            </div>
+        </div>
+
+        <!-- പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുന്ന ബോക്സ് -->
+        <div id="edit-profile-box" style="display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; text-align: left;">
+            <h4 style="margin-top: 0; color: #00796b;">പ്രൊഫൈൽ വിവരങ്ങൾ മാറ്റുക</h4>
+            <label style="font-size: 13px; font-weight: bold;">പുതിയ പേര്:</label>
+            <input type="text" id="new-name-input" style="width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <button onclick="updateUserName()" style="background: #4caf50; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">സേവ് ചെയ്യുക</button>
+            <button onclick="closeEditProfile()" style="background: #757575; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">റദ്ദാക്കുക</button>
         </div>
 
         <!-- 1. പ്രധാന കാറ്റഗറി മെനു -->
@@ -124,12 +135,12 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const userName = localStorage.getItem('userName');
         const userPhone = localStorage.getItem('userPhone');
         const userIcon = localStorage.getItem('userIcon') || '⭐';
 
         let userScore = 0;
         let activeQuestions = [];
+        let userDocId = "";
 
         if (!userPhone) window.location.href = "index.html";
         else {
@@ -140,11 +151,38 @@
         function fetchUserData() {
             db.collection('users').where('phone', '==', userPhone).get().then(snapshot => {
                 snapshot.forEach(doc => {
-                    userScore = doc.data().score || 0;
-                    document.getElementById('welcome-user').innerText = doc.data().name;
+                    userDocId = doc.id;
+                    let data = doc.data();
+                    userScore = data.score || 0;
+                    document.getElementById('welcome-user').innerText = data.name;
                     document.getElementById('user-score-display').innerText = `സ്കോർ: ${userScore}`;
+                    localStorage.setItem('userName', data.name);
                 });
             });
+        }
+
+        function openEditProfile() {
+            let currentName = document.getElementById('welcome-user').innerText;
+            document.getElementById('new-name-input').value = currentName;
+            document.getElementById('edit-profile-box').style.display = 'block';
+        }
+
+        function closeEditProfile() {
+            document.getElementById('edit-profile-box').style.display = 'none';
+        }
+
+        function updateUserName() {
+            let newName = document.getElementById('new-name-input').value.trim();
+            if(!newName) { alert("ദയവായി പേര് നൽകുക!"); return; }
+
+            if(userDocId) {
+                db.collection('users').doc(userDocId).update({ name: newName }).then(() => {
+                    alert("പേര് വിജയകരമായി മാറ്റി!");
+                    document.getElementById('welcome-user').innerText = newName;
+                    localStorage.setItem('userName', newName);
+                    closeEditProfile();
+                }).catch(err => { alert("എറർ: " + err); });
+            }
         }
 
         function selectCategory(category) {
@@ -213,7 +251,6 @@
             });
         }
 
-        // ലീഡർബോർഡ് കാണിക്കാനുള്ള ഫങ്ക്ഷൻ
         function showLeaderboard() {
             document.getElementById('main-category-section').style.display = 'none';
             document.getElementById('leaderboard-section').style.display = 'block';
@@ -244,6 +281,7 @@
             document.getElementById('intro-box').style.display = 'none';
             document.getElementById('quiz-box').style.display = 'none';
             document.getElementById('leaderboard-section').style.display = 'none';
+            document.getElementById('edit-profile-box').style.display = 'none';
             document.getElementById('main-category-section').style.display = 'block';
             clearInterval(timerInterval);
         }
@@ -395,10 +433,9 @@
         }
 
         async function updateScoreToDatabase(addedScore) {
-            const snapshot = await db.collection('users').where('phone', '==', userPhone).get();
-            snapshot.forEach(doc => {
-                db.collection('users').doc(doc.id).update({ score: (doc.data().score || 0) + addedScore });
-            });
+            if(userDocId) {
+                db.collection('users').doc(userDocId).update({ score: (userScore + addedScore) });
+            }
         }
 
         function logout() {
