@@ -64,7 +64,7 @@
                 <div class="row-group">
                     <div class="input-group">
                         <label>വിഭാഗം:</label>
-                        <select id="sub-category" onchange="updateDropdowns()">
+                        <select id="sub-category" onchange="updateDropdowns(); fetchExistingSubjects();">
                             <option value="madrasa">മദ്രസ</option>
                             <option value="school">സ്കൂൾ</option>
                             <option value="gk">GK & Current Affairs</option>
@@ -72,7 +72,7 @@
                     </div>
                     <div class="input-group" id="class-div">
                         <label>ക്ലാസ്സ്:</label>
-                        <select id="sub-class">
+                        <select id="sub-class" onchange="fetchExistingSubjects()">
                             <option value="1">ക്ലാസ്സ് 1</option><option value="2">ക്ലാസ്സ് 2</option><option value="3">ക്ലാസ്സ് 3</option>
                             <option value="4">ക്ലാസ്സ് 4</option><option value="5">ക്ലാസ്സ് 5</option><option value="6">ക്ലാസ്സ് 6</option>
                             <option value="7">ക്ലാസ്സ് 7</option><option value="8">ക്ലാസ്സ് 8</option><option value="9">ക്ലാസ്സ് 9</option><option value="10">ക്ലാസ്സ് 10</option>
@@ -80,7 +80,11 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>പുതിയ വിഷയങ്ങൾ (കോമ ഇട്ട് നൽകുക):</label>
+                    <label>നിലവിലുള്ള വിഷയങ്ങൾ:</label>
+                    <div id="existing-subjects-display" style="padding: 8px; background: #eee; border-radius: 4px; font-size: 14px; margin-bottom: 10px; color: #333;">ഒന്നുമില്ല</div>
+                </div>
+                <div class="input-group">
+                    <label>പുതിയ വിഷയങ്ങൾ ചേർക്കുക (കോമ ഇട്ട് നൽകുക):</label>
                     <input type="text" id="subject-names" placeholder="ഉദാ: ഫിഖ്ഹ്, ഹദീസ്">
                 </div>
                 <button onclick="saveSubjects()" style="background-color: #0288d1; padding: 10px 20px; color:white; border:none; border-radius:5px; cursor:pointer;">വിഷയങ്ങൾ ചേർക്കുക (Add Subjects)</button>
@@ -240,6 +244,7 @@
                 loadImpSubjects();
                 loadManSubjects();
                 loadMngSubjects();
+                fetchExistingSubjects();
             } else {
                 alert("തെറ്റായ യൂസർനെയിം അല്ലെങ്കിൽ പാസ്‌വേർഡ്!");
             }
@@ -252,6 +257,22 @@
                 snap.forEach(doc => {
                     allQuestionsCache.push(doc.data());
                 });
+            });
+        }
+
+        // നിലവിലുള്ള വിഷയങ്ങൾ ഫെച്ച് ചെയ്ത് കാണിക്കാൻ
+        function fetchExistingSubjects() {
+            let category = document.getElementById('sub-category').value;
+            let classNum = document.getElementById('sub-class').value;
+            let docKey = (category === 'gk') ? 'gk_subjects' : (category + '_class_' + classNum);
+            let displayBox = document.getElementById('existing-subjects-display');
+
+            db.collection('settings').doc(docKey).get().then(doc => {
+                if(doc.exists && doc.data().subjects && doc.data().subjects.length > 0) {
+                    displayBox.innerText = doc.data().subjects.join(', ');
+                } else {
+                    displayBox.innerText = "ഈ ക്ലാസിൽ ഇതുവരെ വിഷയങ്ങൾ നൽകിയിട്ടില്ല.";
+                }
             });
         }
 
@@ -364,7 +385,6 @@
         function loadManSubjects() { loadSubjectsToDropdown('man-category', 'man-class', 'manual-subject'); }
         function loadMngSubjects() { loadSubjectsToDropdown('mng-category', 'mng-class', 'search-subject'); }
 
-        // പുതിയ വിഷയങ്ങൾ ചേർക്കുമ്പോൾ പഴയവ നിലനിർത്തി അപ്ഡേറ്റ് ചെയ്യുന്ന കോഡ് (ArrayUnion ഉപയോഗിച്ച്)
         function saveSubjects() {
             let category = document.getElementById('sub-category').value;
             let classNum = document.getElementById('sub-class').value;
@@ -374,12 +394,12 @@
             let subjectsArray = subjectsRaw.split(',').map(s => s.trim()).filter(s => s !== "");
             let docKey = (category === 'gk') ? 'gk_subjects' : (category + '_class_' + classNum);
 
-            // firebase.firestore.FieldValue.arrayUnion ഉപയോഗിച്ച് പഴയവ ഡിലീറ്റ് ആകാതെ പുതിയവ കൂടെ ചേർക്കുന്നു
             db.collection('settings').doc(docKey).set({
                 subjects: firebase.firestore.FieldValue.arrayUnion(...subjectsArray)
             }, { merge: true }).then(() => {
                 alert("വിഷയങ്ങൾ വിജയകരമായി ചേർത്തു!");
                 document.getElementById('subject-names').value = '';
+                fetchExistingSubjects();
                 loadImpSubjects(); loadManSubjects(); loadMngSubjects();
             }).catch(err => {
                 alert("എറർ: " + err);
