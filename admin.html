@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>അഡ്മിൻ പാനൽ - ക്വിസ് ആപ്പ്</title>
+    <title>Smart Academy - Admin Panel</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body { font-family: sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
-        .admin-container { max-width: 800px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .admin-container { max-width: 850px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .admin-section { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #e0e0e0; text-align: left; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #333; }
@@ -16,12 +16,16 @@
         .row-group .input-group { flex: 1; }
         .question-card { background: #fff; padding: 12px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 6px; font-size: 14px; }
         .action-btn { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; border-radius: 4px; color: white; margin-right: 5px; }
+        .stat-box { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-card { background: #e0f2f1; padding: 15px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center; border: 1px solid #b2dfdb; }
+        .stat-card h4 { margin: 0; color: #00796b; font-size: 14px; }
+        .stat-card p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #004d40; }
         @media (max-width: 600px) { .row-group { flex-direction: column; gap: 0; } }
     </style>
 </head>
 <body>
     <div class="admin-container">
-        <h2 style="color: #00796b; text-align: center; margin-top: 0;">അഡ്മിൻ പാനൽ</h2>
+        <h2 style="color: #00796b; text-align: center; margin-top: 0;">Smart Academy - Admin Panel</h2>
         
         <!-- അഡ്മിൻ ലോഗിൻ -->
         <div id="admin-login-box" style="max-width: 400px; margin: 40px auto; text-align: center;">
@@ -33,6 +37,18 @@
         <!-- അഡ്മിൻ ഡാഷ്‌ബോർഡ് -->
         <div id="admin-dashboard" style="display: none;">
             
+            <!-- സ്റ്റാറ്റിസ്റ്റിക്സ് ബോർഡ് (ആകെ ചോദ്യങ്ങളുടെ കണക്കുകൾ) -->
+            <div class="stat-box">
+                <div class="stat-card">
+                    <h4>ആകെ ചോദ്യങ്ങൾ</h4>
+                    <p id="total-q-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>പെൻഡിങ് അക്കൗണ്ടുകൾ</h4>
+                    <p id="pending-count">0</p>
+                </div>
+            </div>
+
             <!-- പെൻഡിങ് അക്കൗണ്ടുകൾ -->
             <div class="admin-section">
                 <h3 style="color: #d32f2f; margin-top: 0;">പെൻഡിങ് അക്കൗണ്ടുകൾ</h3>
@@ -53,7 +69,7 @@
                     </div>
                     <div class="input-group" id="class-div">
                         <label>ക്ലാസ്സ്:</label>
-                        <select id="sub-class" onchange="loadSubjectsList()">
+                        <select id="sub-class">
                             <option value="1">ക്ലാസ്സ് 1</option><option value="2">ക്ലാസ്സ് 2</option><option value="3">ക്ലാസ്സ് 3</option>
                             <option value="4">ക്ലാസ്സ് 4</option><option value="5">ക്ലാസ്സ് 5</option><option value="6">ക്ലാസ്സ് 6</option>
                             <option value="7">ക്ലാസ്സ് 7</option><option value="8">ക്ലാസ്സ് 8</option><option value="9">ക്ലാസ്സ് 9</option><option value="10">ക്ലാസ്സ് 10</option>
@@ -176,8 +192,8 @@
                     <label>വിഷയം തിരഞ്ഞെടുക്കുക:</label>
                     <select id="search-subject" onchange="loadQuestionsForManagement()"></select>
                 </div>
-                <div id="questions-manage-container" style="max-height: 300px; overflow-y: auto;">
-                    <p style="color: #775;">വിഷയം തിരഞ്ഞെടുതാൽ ചോദ്യങ്ങൾ ഇവിടെ കാണാം.</p>
+                <div id="questions-manage-container" style="max-height: 350px; overflow-y: auto;">
+                    <p style="color: #775;">വിഷയം തിരഞ്ഞെടുതാൽ ചോദ്യങ്ങളും അവയുടെ കോഡുകളും ഇവിടെ കാണാം.</p>
                 </div>
             </div>
 
@@ -206,6 +222,7 @@
             if (user === "admin" && pass === "admin123") {
                 document.getElementById('admin-login-box').style.display = 'none';
                 document.getElementById('admin-dashboard').style.display = 'block';
+                loadDashboardStats();
                 loadPendingUsersLive();
                 loadImpSubjects();
                 loadManSubjects();
@@ -215,10 +232,18 @@
             }
         }
 
+        // ആകെ ചോദ്യങ്ങളുടെയും പെൻഡിങ് യൂസേഴ്സിന്റെയും കൗണ്ട് കാണിക്കാൻ
+        function loadDashboardStats() {
+            db.collection('questions').get().then(snap => {
+                document.getElementById('total-q-count').innerText = snap.size;
+            });
+        }
+
         function loadPendingUsersLive() {
             const list = document.getElementById('pending-list');
             db.collection('users').where('status', '==', 'pending').onSnapshot(snapshot => {
                 list.innerHTML = '';
+                document.getElementById('pending-count').innerText = snapshot.size;
                 if(snapshot.empty) { list.innerHTML = '<li>പെൻഡിങ് അക്കൗണ്ടുകൾ ഒന്നുമില്ല.</li>'; return; }
                 snapshot.forEach(doc => {
                     let data = doc.data();
@@ -272,12 +297,15 @@
                     opt.value = ""; opt.innerText = "വിഷയങ്ങൾ ലഭ്യമല്ല";
                     dropdown.appendChild(opt);
                 }
+                if(dropdownId === 'search-subject') {
+                    loadQuestionsForManagement();
+                }
             });
         }
 
         function loadImpSubjects() { loadSubjectsToDropdown('imp-category', 'imp-class', 'q-subject-name'); }
         function loadManSubjects() { loadSubjectsToDropdown('man-category', 'man-class', 'manual-subject'); }
-        function loadMngSubjects() { loadSubjectsToDropdown('mng-category', 'mng-class', 'search-subject'); setTimeout(loadQuestionsForManagement, 300); }
+        function loadMngSubjects() { loadSubjectsToDropdown('mng-category', 'mng-class', 'search-subject'); }
 
         function saveSubjects() {
             let category = document.getElementById('sub-category').value;
@@ -304,6 +332,16 @@
             return row.Correct_Answer;
         }
 
+        // റാൻഡം ചോദ്യ കോഡ് ജനറേറ്റ് ചെയ്യാൻ (ഉദാ: Q-7A2F)
+        function generateQCode() {
+            let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'Q-';
+            for(let i=0; i<4; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
         function importQuestionsFromCSV() {
             let category = document.getElementById('imp-category').value;
             let classNum = document.getElementById('imp-class').value;
@@ -316,6 +354,8 @@
             fetch(url).then(res => res.text()).then(data => {
                 let rows = data.split('\n');
                 let count = 0;
+                let batch = db.batch();
+
                 for(let i = 1; i < rows.length; i++) {
                     let rowText = rows[i].trim();
                     if(rowText) {
@@ -329,7 +369,9 @@
                                 Option_D: cols[4].replace(/^"|"$/g, '').trim(),
                                 Correct_Answer: cols[5].replace(/^"|"$/g, '').trim()
                             };
-                            db.collection('questions').add({
+                            let newDocRef = db.collection('questions').doc();
+                            batch.set(newDocRef, {
+                                qCode: generateQCode(), // യുണീക്ക് കോഡ് അഡ് ചെയ്യപ്പെടുന്നു
                                 section: sectionKey,
                                 subject: subjectName,
                                 Question: qObj.Question,
@@ -343,8 +385,12 @@
                         }
                     }
                 }
-                alert(`${count} ചോദ്യങ്ങൾ വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു!`);
-                document.getElementById('csv-link').value = '';
+                batch.commit().then(() => {
+                    alert(`${count} ചോദ്യങ്ങൾ വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു!`);
+                    document.getElementById('csv-link').value = '';
+                    loadDashboardStats();
+                    loadQuestionsForManagement();
+                });
             }).catch(err => alert("എറർ: " + err));
         }
 
@@ -368,12 +414,21 @@
             if(ansOption === 'D') answerText = Option_D;
 
             let sectionKey = (category === 'gk') ? 'gk' : (category + '_' + classNum);
-            let dataObj = { section: sectionKey, subject, Question, Option_A, Option_B, Option_C, Option_D, answerText };
 
             if(docId) {
-                db.collection('questions').doc(docId).update(dataObj).then(() => { alert("ചോദ്യം അപ്ഡേറ്റ് ചെയ്തു!"); resetForm(); });
+                db.collection('questions').doc(docId).update({
+                    subject, Question, Option_A, Option_B, Option_C, Option_D, answerText
+                }).then(() => { alert("ചോദ്യം അപ്ഡേറ്റ് ചെയ്തു!"); resetForm(); });
             } else {
-                db.collection('questions').add(dataObj).then(() => { alert("ചോദ്യം ചേർത്തു!"); resetForm(); });
+                db.collection('questions').add({
+                    qCode: generateQCode(), // പുതിയ ചോദ്യത്തിന് കോഡ് ജനറേറ്റ് ചെയ്യുന്നു
+                    section: sectionKey,
+                    subject, Question, Option_A, Option_B, Option_C, Option_D, answerText
+                }).then(() => { 
+                    alert("ചോദ്യം ചേർത്തു!"); 
+                    resetForm(); 
+                    loadDashboardStats();
+                });
             }
         }
 
@@ -402,7 +457,8 @@
                     let d = doc.data();
                     let card = document.createElement('div');
                     card.className = 'question-card';
-                    card.innerHTML = `<b>ചോദ്യം:</b> ${d.Question} <br><b>ഉത്തരം:</b> ${d.answerText} <br><br>
+                    card.innerHTML = `<span style="background: #00796b; color: white; padding: 2px 6px; font-size: 11px; border-radius: 3px; font-weight: bold;">കോഡ്: ${d.qCode || 'N/A'}</span><br><br>
+                        <b>ചോദ്യം:</b> ${d.Question} <br><b>ഉത്തരം:</b> ${d.answerText} <br><br>
                         <button class="action-btn" style="background:#0288d1;" onclick="editQuestion('${doc.id}', '${d.subject}', '${d.Question}', '${d.Option_A}', '${d.Option_B}', '${d.Option_C}', '${d.Option_D}')">എഡിറ്റ്</button>
                         <button class="action-btn" style="background:#d32f2f;" onclick="deleteQuestion('${doc.id}')">ഡിലീറ്റ്</button>`;
                     container.appendChild(card);
@@ -420,13 +476,14 @@
             document.getElementById('manual-opt4').value = o4;
             document.getElementById('form-title').innerText = "ചോദ്യം എഡിറ്റ് ചെയ്യുക";
             document.getElementById('save-q-btn').innerText = "അപ്ഡേറ്റ് ചെയ്യുക";
-            window.scrollTo({ top: 500, behavior: 'smooth' });
+            window.scrollTo({ top: 300, behavior: 'smooth' });
         }
 
         function deleteQuestion(id) {
             if(confirm("ഈ ചോദ്യം ഡിലീറ്റ് ചെയ്യണമെന്ന് ഉറപ്പാണോ?")) {
                 db.collection('questions').doc(id).delete().then(() => {
                     alert("ചോദ്യം ഡിലീറ്റ് ചെയ്തു!");
+                    loadDashboardStats();
                     loadQuestionsForManagement();
                 });
             }
