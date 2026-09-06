@@ -28,6 +28,22 @@
         .leaderboard-table th { background-color: #00796b; color: white; }
         
         .result-box-container { text-align: center; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 12px; margin-top: 15px; }
+
+        /* കസ്റ്റം പോപ്പ്-അപ്പ് (Theme Modal) */
+        .custom-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 100; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+        .custom-modal-box { background: #fff; border-radius: 18px; padding: 25px 20px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.25s ease; border: 2px solid #00796b; }
+        @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .custom-modal-box h4 { margin: 0 0 10px 0; color: #00796b; font-size: 18px; }
+        .custom-modal-box p { color: #555; font-size: 14px; line-height: 1.5; margin: 0 0 20px 0; }
+        .modal-btn-group { display: flex; justify-content: center; gap: 10px; }
+        .modal-btn { padding: 10px 22px; border-radius: 20px; font-size: 14px; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        .modal-btn-confirm { background: #00796b; color: #fff; }
+        .modal-btn-confirm:hover { background: #004d40; }
+        .modal-btn-danger { background: #d32f2f; color: #fff; }
+        .modal-btn-danger:hover { background: #b71c1c; }
+        .modal-btn-cancel { background: #e0e0e0; color: #333; }
+        .modal-btn-cancel:hover { background: #d5d5d5; }
+
         @media (max-width: 480px) {
             body { padding: 8px; }
             .container { padding: 15px; }
@@ -127,7 +143,16 @@
         <div id="result-box" class="result-box-container" style="display: none;"></div>
 
         <div style="text-align: center;">
-            <button onclick="logout()" class="small-btn">പുറത്തുപോവുക (Logout)</button>
+            <button onclick="confirmLogout()" class="small-btn">പുറത്തുപോവുക (Logout)</button>
+        </div>
+    </div>
+
+    <!-- കസ്റ്റം തീം പോപ്പ്-അപ്പ് ഘടന -->
+    <div id="custom-modal" class="custom-modal-overlay">
+        <div class="custom-modal-box">
+            <h4 id="custom-modal-title">ശ്രദ്ധിക്കുക</h4>
+            <p id="custom-modal-message"></p>
+            <div class="modal-btn-group" id="custom-modal-buttons"></div>
         </div>
     </div>
 
@@ -167,6 +192,34 @@
             fetchUserData();
         }
 
+        // --- തീം അനുയോജ്യമായ കസ്റ്റം പോപ്പ്-അപ്പുകൾ ---
+        function showThemeAlert(title, message) {
+            document.getElementById('custom-modal-title').innerText = title;
+            document.getElementById('custom-modal-message').innerText = message;
+            const btnGroup = document.getElementById('custom-modal-buttons');
+            btnGroup.innerHTML = `<button class="modal-btn modal-btn-confirm" onclick="closeThemeModal()">ശരി (OK)</button>`;
+            document.getElementById('custom-modal').style.display = 'flex';
+        }
+
+        function showThemeConfirm(title, message, onConfirm) {
+            document.getElementById('custom-modal-title').innerText = title;
+            document.getElementById('custom-modal-message').innerText = message;
+            const btnGroup = document.getElementById('custom-modal-buttons');
+            btnGroup.innerHTML = `
+                <button class="modal-btn modal-btn-danger" id="theme-confirm-yes">അതെ (Yes)</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeThemeModal()">വേണ്ട (Cancel)</button>
+            `;
+            document.getElementById('theme-confirm-yes').onclick = () => {
+                closeThemeModal();
+                onConfirm();
+            };
+            document.getElementById('custom-modal').style.display = 'flex';
+        }
+
+        function closeThemeModal() {
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+
         function fetchUserData() {
             db.collection('users').where('phone', '==', userPhone).get().then(snapshot => {
                 if(snapshot.empty) {
@@ -202,15 +255,15 @@
 
         function updateUserName() {
             let newName = document.getElementById('new-name-input').value.trim();
-            if(!newName) { alert("ദയവായി പേര് നൽകുക!"); return; }
+            if(!newName) { showThemeAlert("ശ്രദ്ധിക്കുക", "ദയവായി പേര് നൽകുക!"); return; }
 
             if(userDocId) {
                 db.collection('users').doc(userDocId).update({ name: newName }).then(() => {
-                    alert("പേര് വിജയകരമായി മാറ്റി!");
+                    showThemeAlert("വിജയം", "പേര് വിജയകരമായി മാറ്റി!");
                     document.getElementById('welcome-user').innerText = newName;
                     localStorage.setItem('userName', newName);
                     closeEditProfile();
-                }).catch(err => { alert("എറർ: " + err); });
+                }).catch(err => { showThemeAlert("പിഴവ്", "എറർ: " + err); });
             }
         }
 
@@ -314,7 +367,7 @@
                     } else {
                         btn.className += ' locked';
                         btn.innerText = `🔒 പാഠം (Lesson) ${l} (ലോക്ക് ചെയ്തിരിക്കുന്നു)`;
-                        btn.onclick = () => alert("മുൻപത്തെ പാഠം പൂർത്തിയാക്കിയാൽ മാത്രമേ ഇത് അൺലോക്ക് ആവുകയുള്ളൂ!");
+                        btn.onclick = () => showThemeAlert("ലോക്ക് ചെയ്തിരിക്കുന്നു", "മുൻപത്തെ പാഠം പൂർത്തിയാക്കിയാൽ മാത്രമേ ഇത് അൺലോക്ക് ആവുകയുള്ളൂ!");
                     }
                     container.appendChild(btn);
                 }
@@ -349,11 +402,11 @@
                     currentPhaseIndex = 0;
                     prepareQuiz();
                 } else {
-                    alert("ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
+                    showThemeAlert("ലഭ്യമല്ല", "ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
                     showLessonsForSubject(subjectName);
                 }
             }).catch(err => {
-                alert("ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്!");
+                showThemeAlert("പിഴവ്", "ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ് സംഭവിച്ചു!");
             });
         }
 
@@ -574,12 +627,12 @@
             document.getElementById('main-category-section').style.display = 'block';
         }
 
-        // കൺഫർമേഷനോടുകൂടിയ ലോഗൗട്ട്
-        function logout() {
-            if(confirm("തീർച്ചയായും നിങ്ങൾക്ക് പുറത്തുപോകണം (Logout) എന്ന് ഉറപ്പാണോ?")) {
+        // കസ്റ്റം തീം പോപ്പ്-അപ്പ് വഴി ലോഗൗട്ട് ചെയ്യുക
+        function confirmLogout() {
+            showThemeConfirm("പുറത്തുപോവുക (Logout)", "തീർച്ചയായും നിങ്ങൾക്ക് ഈ ആപ്പിൽ നിന്നും പുറത്തുപോകണം എന്ന് ഉറപ്പാണോ?", () => {
                 localStorage.clear();
                 window.location.href = "index.html";
-            }
+            });
         }
     </script>
 </body>
