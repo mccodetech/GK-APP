@@ -95,13 +95,13 @@
         <!-- 3. പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശം -->
         <div id="intro-box" style="display: none; text-align: center;">
             <h3 id="intro-title">ക്വിസ്</h3>
-            <p>ഈ പാഠത്തിലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ അടുത്ത പാഠം അൺലോക്ക് ആകൂ!</p>
+            <p id="intro-desc">ഈ പാഠത്തിലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ അടുത്ത ഘട്ടം/പാഠം അൺലോക്ക് ആകൂ!</p>
             <button onclick="startActualQuiz()" style="background-color: #0288d1; padding: 12px; font-size: 16px; border:none; color:white; border-radius:5px; cursor:pointer;">പഠനം തുടങ്ങുക (Start Quiz)</button>
             <br>
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
         </div>
 
-        <!-- 4. ക്വിസ് സെക്ഷൻ (ചോദ്യങ്ങൾ മാത്രം കാണിക്കാൻ) -->
+        <!-- 4. ക്വിസ് സെക്ഷൻ -->
         <div id="quiz-box" style="display: none; text-align: left;">
             <div class="q-progress-bar" id="q-dots-container"></div>
 
@@ -117,10 +117,8 @@
             <button onclick="goBackToMain()" class="back-btn" style="margin-top: 15px;">പിന്നോട്ട് (Back)</button>
         </div>
 
-        <!-- 5. റിസൾട്ട് കാണിക്കാനുള്ള പുതിയ സെക്ഷൻ -->
-        <div id="result-box" class="result-box-container" style="display: none;">
-            <!-- റിസൾട്ട് ഇവിടെ ലോഡ് ആകും -->
-        </div>
+        <!-- 5. റിസൾട്ട് കാണിക്കാനുള്ള സെക്ഷൻ -->
+        <div id="result-box" class="result-box-container" style="display: none;"></div>
 
         <div style="text-align: center;">
             <button onclick="logout()" class="small-btn">പുറത്തുപോവുക (Logout)</button>
@@ -148,6 +146,8 @@
 
         let userScore = 0;
         let activeQuestions = [];
+        let lessonPhases = []; // ഫേസുകളായി തിരിച്ചുവെച്ച ചോദ്യങ്ങൾ
+        let currentPhaseIndex = 0;
         let rawLessonQuestions = [];
         let userDocId = "";
         let userDataObj = {};
@@ -325,6 +325,13 @@
                 });
 
                 if(rawLessonQuestions.length > 0) {
+                    // ചോദ്യങ്ങളെ 10 എണ്ണം വീതമുള്ള ഫേസുകളായി (chunks) തിരിക്കുന്നു
+                    let shuffled = shuffleArray([...rawLessonQuestions]);
+                    lessonPhases = [];
+                    for (let i = 0; i < shuffled.length; i += 10) {
+                        lessonPhases.push(shuffled.slice(i, i + 10));
+                    }
+                    currentPhaseIndex = 0;
                     prepareQuiz();
                 } else {
                     alert("ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
@@ -338,10 +345,10 @@
         function prepareQuiz() {
             hideAllSections();
             document.getElementById('intro-box').style.display = 'block';
-            document.getElementById('intro-title').innerText = currentLessonTitle;
+            document.getElementById('intro-title').innerText = `${currentLessonTitle} (ഫേസ് ${currentPhaseIndex + 1}/${lessonPhases.length})`;
+            document.getElementById('intro-desc').innerText = `ഈ പാഠത്തിലെ ഫേസ് ${currentPhaseIndex + 1}-ലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകുക!`;
             
-            let shuffled = shuffleArray([...rawLessonQuestions]);
-            activeQuestions = shuffled.slice(0, 10);
+            activeQuestions = lessonPhases[currentPhaseIndex];
         }
 
         function shuffleArray(array) {
@@ -443,29 +450,40 @@
         function evaluateResult(scoreCount, total) {
             let percentage = (scoreCount / total) * 100;
             
-            // ക്വിസ് ബോക്സ് മറച്ചുവെച്ച്, റിസൾട്ട് ബോക്സ് കാണിക്കുന്നു
             document.getElementById('quiz-box').style.display = 'none';
             const resultBox = document.getElementById('result-box');
             resultBox.style.display = 'block';
 
             if (scoreCount === total) {
-                resultBox.innerHTML = `<h3 style="color: #388e3c;">🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം വിജയിച്ചു!</h3>
-                                    <p style="font-size: 18px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
-                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">തുടരുക (Next Lessons)</button>`;
-                
-                updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
+                // നോക്കുക: ഇനിയും ഫേസുകൾ ബാക്കിയുണ്ടോ എന്ന് പരിശോധിക്കുന്നു
+                if (currentPhaseIndex + 1 < lessonPhases.length) {
+                    resultBox.innerHTML = `<h3 style="color: #388e3c;">🎉 അഭിനന്ദനങ്ങൾ! ഫേസ് ${currentPhaseIndex + 1} വിജയിച്ചു!</h3>
+                                        <p style="font-size: 16px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
+                                        <button onclick="nextPhase()" style="background:#00796b; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">അടുത്ത ഫേസിലേക്ക് പോവുക (Next Phase)</button>`;
+                } else {
+                    // എല്ലാ ഫേസുകളും കഴിഞ്ഞു, പാഠം പൂർത്തിയായി!
+                    resultBox.innerHTML = `<h3 style="color: #388e3c;">🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം പൂർണ്ണമായി വിജയിച്ചു!</h3>
+                                        <p style="font-size: 18px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
+                                        <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">തുടരുക (Next Lessons)</button>`;
+                    
+                    updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
+                }
             } else {
                 resultBox.innerHTML = `<h3 style="color: #d32f2f;">❌ പരാജയപ്പെട്ടു!</h3>
-                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ.<br>ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
+                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ.<br>ഈ ഫേസ് പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
                                     <button onclick="restartQuiz()" style="background:#d32f2f; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer; margin-bottom: 10px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
                                     <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
             }
         }
 
-        // വീണ്ടും ശ്രമിക്കുമ്പോൾ
+        // അടുത്ത ഫേസിലേക്ക് പോകാൻ
+        function nextPhase() {
+            currentPhaseIndex++;
+            prepareQuiz();
+        }
+
+        // വീണ്ടും ശ്രമിക്കുമ്പോൾ അതേ ഫേസ് വീണ്ടും വരാൻ
         function restartQuiz() {
-            let shuffled = shuffleArray([...rawLessonQuestions]);
-            activeQuestions = shuffled.slice(0, 10);
             startActualQuiz();
         }
 
