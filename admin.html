@@ -111,9 +111,15 @@
                         </select>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>വിഷയം തിരഞ്ഞെടുക്കുക:</label>
-                    <select id="q-subject-name"></select>
+                <div class="row-group">
+                    <div class="input-group">
+                        <label>വിഷയം തിരഞ്ഞെടുക്കുക:</label>
+                        <select id="q-subject-name"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>പാഠം നമ്പർ (Lesson No):</label>
+                        <input type="number" id="imp-lesson" value="1" min="1" max="20" style="padding: 10px;">
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>Google Sheet CSV Link:</label>
@@ -146,10 +152,17 @@
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label>വിഷയം തിരഞ്ഞെടുക്കുക:</label>
-                    <select id="manual-subject"></select>
+                <div class="row-group">
+                    <div class="input-group">
+                        <label>വിഷയം തിരഞ്ഞെടുക്കുക:</label>
+                        <select id="manual-subject"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>പാഠം നമ്പർ (Lesson No):</label>
+                        <input type="number" id="manual-lesson" value="1" min="1" max="20" style="padding: 10px;">
+                    </div>
                 </div>
+
                 <div class="input-group">
                     <label>ചോദ്യം:</label>
                     <textarea id="manual-q" rows="2" placeholder="ചോദ്യം ഇവിടെ എഴുതുക"></textarea>
@@ -260,7 +273,6 @@
             });
         }
 
-        // നിലവിലുള്ള വിഷയങ്ങൾ ഫെച്ച് ചെയ്ത് കാണിക്കാൻ
         function fetchExistingSubjects() {
             let category = document.getElementById('sub-category').value;
             let classNum = document.getElementById('sub-class').value;
@@ -428,6 +440,7 @@
             let category = document.getElementById('imp-category').value;
             let classNum = document.getElementById('imp-class').value;
             let subjectName = document.getElementById('q-subject-name').value;
+            let lessonNo = parseInt(document.getElementById('imp-lesson').value) || 1;
             let url = document.getElementById('csv-link').value.trim();
 
             if(!subjectName || !url) { alert("വിഷയവും ലിങ്കും നൽകുക!"); return; }
@@ -456,6 +469,7 @@
                                 qCode: generateQCode(),
                                 section: sectionKey,
                                 subject: subjectName,
+                                lesson: lessonNo, // പാഠം നമ്പർ സേവ് ചെയ്യപ്പെടുന്നു
                                 Question: qObj.Question,
                                 Option_A: qObj.Option_A,
                                 Option_B: qObj.Option_B,
@@ -468,7 +482,7 @@
                     }
                 }
                 batch.commit().then(() => {
-                    alert(`${count} ചോദ്യങ്ങൾ വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു!`);
+                    alert(`${count} ചോദ്യങ്ങൾ Lesson ${lessonNo}-ലേക്ക് വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു!`);
                     document.getElementById('csv-link').value = '';
                     loadDashboardStats();
                     loadQuestionsForManagement();
@@ -481,6 +495,7 @@
             let category = document.getElementById('man-category').value;
             let classNum = document.getElementById('man-class').value;
             let subject = document.getElementById('manual-subject').value;
+            let lessonNo = parseInt(document.getElementById('manual-lesson').value) || 1;
             let Question = document.getElementById('manual-q').value.trim();
             let Option_A = document.getElementById('manual-opt1').value.trim();
             let Option_B = document.getElementById('manual-opt2').value.trim();
@@ -499,13 +514,15 @@
 
             if(docId) {
                 db.collection('questions').doc(docId).update({
-                    subject, Question, Option_A, Option_B, Option_C, Option_D, answerText
+                    subject, lesson: lessonNo, Question, Option_A, Option_B, Option_C, Option_D, answerText
                 }).then(() => { alert("ചോദ്യം അപ്ഡേറ്റ് ചെയ്തു!"); resetForm(); loadDashboardStats(); });
             } else {
                 db.collection('questions').add({
                     qCode: generateQCode(),
                     section: sectionKey,
-                    subject, Question, Option_A, Option_B, Option_C, Option_D, answerText
+                    subject,
+                    lesson: lessonNo, // പാഠം നമ്പർ സേവ് ചെയ്യപ്പെടുന്നു
+                    Question, Option_A, Option_B, Option_C, Option_D, answerText
                 }).then(() => { 
                     alert("ചോദ്യം ചേർത്തു!"); 
                     resetForm(); 
@@ -539,18 +556,20 @@
                     let d = doc.data();
                     let card = document.createElement('div');
                     card.className = 'question-card';
-                    card.innerHTML = `<span style="background: #00796b; color: white; padding: 2px 6px; font-size: 11px; border-radius: 3px; font-weight: bold;">കോഡ്: ${d.qCode || 'N/A'}</span><br><br>
+                    card.innerHTML = `<span style="background: #00796b; color: white; padding: 2px 6px; font-size: 11px; border-radius: 3px; font-weight: bold;">കോഡ്: ${d.qCode || 'N/A'}</span> 
+                                      <span style="background: #e65100; color: white; padding: 2px 6px; font-size: 11px; border-radius: 3px; font-weight: bold; margin-left: 5px;">പാഠം: ${d.lesson || 1}</span><br><br>
                         <b>ചോദ്യം:</b> ${d.Question} <br><b>ഉത്തരം:</b> ${d.answerText} <br><br>
-                        <button class="action-btn" style="background:#0288d1;" onclick="editQuestion('${doc.id}', '${d.subject}', '${d.Question}', '${d.Option_A}', '${d.Option_B}', '${d.Option_C}', '${d.Option_D}')">എഡിറ്റ്</button>
+                        <button class="action-btn" style="background:#0288d1;" onclick="editQuestion('${doc.id}', '${d.subject}', '${d.lesson || 1}', '${d.Question}', '${d.Option_A}', '${d.Option_B}', '${d.Option_C}', '${d.Option_D}')">എഡിറ്റ്</button>
                         <button class="action-btn" style="background:#d32f2f;" onclick="deleteQuestion('${doc.id}')">ഡിലീറ്റ്</button>`;
                     container.appendChild(card);
                 });
             });
         }
 
-        function editQuestion(id, sub, q, o1, o2, o3, o4) {
+        function editQuestion(id, sub, lesson, q, o1, o2, o3, o4) {
             document.getElementById('edit-doc-id').value = id;
             document.getElementById('manual-subject').value = sub;
+            document.getElementById('manual-lesson').value = lesson;
             document.getElementById('manual-q').value = q;
             document.getElementById('manual-opt1').value = o1;
             document.getElementById('manual-opt2').value = o2;
