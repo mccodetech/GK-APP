@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Academy - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        .small-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #d32f2f !important; margin-top: 15px; }
-        .back-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #757575 !important; margin-top: 15px; margin-right: 5px; }
-        .menu-btn { width: 100%; padding: 14px; background-color: #00796b; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; text-align: left; margin-bottom: 10px; font-weight: bold; }
+        body { font-family: sans-serif; background: #eef2f3; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .container { width: 100%; max-width: 500px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .small-btn { width: auto !important; padding: 6px 15px !important; font-size: 13px !important; background-color: #d32f2f !important; margin-top: 15px; }
+        .back-btn { width: auto !important; padding: 6px 15px !important; font-size: 13px !important; background-color: #757575 !important; margin-top: 15px; margin-right: 5px; }
+        .menu-btn { width: 100%; padding: 14px; background-color: #00796b; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; text-align: left; margin-bottom: 10px; font-weight: bold; transition: 0.2s; }
         .menu-btn:hover { background-color: #004d40; }
-        .menu-btn.locked { background-color: #bdbdbd !important; cursor: not-allowed; }
-        .user-profile { background: #e0f2f1; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .menu-btn.locked { background-color: #b0bec5 !important; cursor: not-allowed; }
+        .user-profile { background: #e0f2f1; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #b2dfdb; }
         
         .timer-container { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
         .circular-timer { position: relative; width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(#00796b 360deg, #e0e0e0 0deg); display: flex; justify-content: center; align-items: center; }
         .circular-timer span { position: absolute; font-size: 14px; font-weight: bold; color: #333; background: white; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
 
         .q-progress-bar { display: flex; gap: 4px; justify-content: center; margin-bottom: 15px; }
-        .q-dot { width: 25px; height: 8px; background: #e0e0e0; border-radius: 4px; }
+        .q-dot { width: 22px; height: 6px; background: #e0e0e0; border-radius: 3px; }
         .q-dot.correct { background: #4caf50; }
         .q-dot.wrong { background: #f44336; }
 
@@ -26,38 +27,43 @@
         .leaderboard-table th, .leaderboard-table td { border: 1px solid #ddd; padding: 8px; }
         .leaderboard-table th { background-color: #00796b; color: white; }
         
-        .result-box-container { text-align: center; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px; }
+        .result-box-container { text-align: center; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-top: 15px; }
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .container { padding: 12px; }
+            .menu-btn { font-size: 14px; padding: 12px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container" style="max-width: 650px;">
+    <div class="container">
         
-        <h2 style="color: #00796b; margin-top: 0; text-align: center;">Smart Academy</h2>
+        <h2 style="color: #00796b; margin-top: 0; text-align: center; font-size: 22px;">Smart Academy</h2>
 
         <!-- കുട്ടിയുടെ പ്രൊഫൈൽ & സ്കോർ -->
         <div class="user-profile">
             <div>
-                <span id="user-icon" style="font-size: 22px;">⭐</span>
-                <span id="welcome-user" style="font-weight: bold; color: #00796b; font-size: 16px;"></span>
+                <span id="user-icon" style="font-size: 20px;">⭐</span>
+                <span id="welcome-user" style="font-weight: bold; color: #00796b; font-size: 15px;"></span>
             </div>
             <div>
-                <button onclick="openEditProfile()" style="padding: 4px 8px; background: #0288d1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px;">പേര് മാറ്റുക</button>
-                <span id="user-score-display" style="font-weight: bold; color: #333;">സ്കോർ: 0</span>
+                <button onclick="openEditProfile()" style="padding: 4px 8px; background: #0288d1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 4px;">പേര് മാറ്റുക</button>
+                <span id="user-score-display" style="font-weight: bold; color: #333; font-size: 14px;">സ്കോർ: 0</span>
             </div>
         </div>
 
         <!-- പ്രൊഫൈൽ എഡിറ്റ് ബോക്സ് -->
-        <div id="edit-profile-box" style="display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; text-align: left;">
-            <h4 style="margin-top: 0; color: #00796b;">പ്രൊഫൈൽ വിവരങ്ങൾ മാറ്റുക</h4>
-            <label style="font-size: 13px; font-weight: bold;">പുതിയ പേര്:</label>
-            <input type="text" id="new-name-input" style="width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-            <button onclick="updateUserName()" style="background: #4caf50; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">സേവ് ചെയ്യുക</button>
-            <button onclick="closeEditProfile()" style="background: #757575; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">റദ്ദാക്കുക</button>
+        <div id="edit-profile-box" style="display: none; background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; text-align: left;">
+            <h4 style="margin-top: 0; color: #00796b; font-size: 14px;">പ്രൊഫൈൽ വിവരങ്ങൾ മാറ്റുക</h4>
+            <label style="font-size: 12px; font-weight: bold;">പുതിയ പേര്:</label>
+            <input type="text" id="new-name-input" style="width: 100%; padding: 8px; margin-top: 4px; margin-bottom: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+            <button onclick="updateUserName()" style="background: #4caf50; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">സേവ് ചെയ്യുക</button>
+            <button onclick="closeEditProfile()" style="background: #757575; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">റദ്ദാക്കുക</button>
         </div>
 
         <!-- 1. പ്രധാന കാറ്റഗറി മെനു -->
         <div id="main-category-section">
-            <h3>വിഭാഗങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
+            <h3 style="font-size: 16px; color: #333;">വിഭാഗങ്ങൾ തിരഞ്ഞെടുക്കുക</h3>
             <button class="menu-btn" onclick="selectCategory('madrasa')">📖 മദ്രസ പഠനങ്ങൾ</button>
             <button class="menu-btn" onclick="selectCategory('school')">🏫 സ്കൂൾ പഠനങ്ങൾ</button>
             <button class="menu-btn" onclick="selectCategory('gk')">🌍 GK & കറന്റ് അഫയേഴ്സ്</button>
@@ -66,8 +72,8 @@
 
         <!-- ലീഡർബോർഡ് സെക്ഷൻ -->
         <div id="leaderboard-section" style="display: none; text-align: left;">
-            <h3 style="color: #f57c00;">🏆 ടോപ് സ്കോറർമാർ (Leaderboard)</h3>
-            <div style="max-height: 250px; overflow-y: auto;">
+            <h3 style="color: #f57c00; font-size: 16px;">🏆 ടോപ് സ്കോറർമാർ (Leaderboard)</h3>
+            <div style="max-height: 220px; overflow-y: auto;">
                 <table class="leaderboard-table">
                     <thead>
                         <tr>
@@ -86,17 +92,17 @@
 
         <!-- 2. സബ് സെക്ഷൻ -->
         <div id="sub-category-section" style="display: none;">
-            <h3 id="sub-title"></h3>
-            <div id="sub-items-container" style="max-height: 250px; overflow-y: auto;"></div>
+            <h3 id="sub-title" style="font-size: 15px; color: #333;"></h3>
+            <div id="sub-items-container" style="max-height: 230px; overflow-y: auto;"></div>
             <br>
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
         </div>
 
         <!-- 3. പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശം -->
         <div id="intro-box" style="display: none; text-align: center;">
-            <h3 id="intro-title">ക്വിസ്</h3>
-            <p id="intro-desc">ഈ പാഠത്തിലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ അടുത്ത ഘട്ടം/പാഠം അൺലോക്ക് ആകൂ!</p>
-            <button onclick="startActualQuiz()" style="background-color: #0288d1; padding: 12px; font-size: 16px; border:none; color:white; border-radius:5px; cursor:pointer;">പഠനം തുടങ്ങുക (Start Quiz)</button>
+            <h3 id="intro-title" style="font-size: 16px; color: #00796b;">ക്വിസ്</h3>
+            <p id="intro-desc" style="font-size: 14px; color: #555;">ഈ പാഠത്തിലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ അടുത്ത ഘട്ടം അൺലോക്ക് ആകൂ!</p>
+            <button onclick="startActualQuiz()" style="background-color: #0288d1; width: 100%; padding: 12px; font-size: 15px; border:none; color:white; border-radius:6px; cursor:pointer; font-weight: bold;">പഠനം തുടങ്ങുക (Start Quiz)</button>
             <br>
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
         </div>
@@ -111,7 +117,7 @@
                 </div>
             </div>
 
-            <h3 id="question-title">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
+            <h3 id="question-title" style="font-size: 15px; color: #333;">ചോദ്യം ഇവിടെ വരുന്നു...</h3>
             <div id="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
             
             <button onclick="goBackToMain()" class="back-btn" style="margin-top: 15px;">പിന്നോട്ട് (Back)</button>
@@ -146,7 +152,7 @@
 
         let userScore = 0;
         let activeQuestions = [];
-        let lessonPhases = []; // ഫേസുകളായി തിരിച്ചുവെച്ച ചോദ്യങ്ങൾ
+        let lessonPhases = [];
         let currentPhaseIndex = 0;
         let rawLessonQuestions = [];
         let userDocId = "";
@@ -163,9 +169,20 @@
 
         function fetchUserData() {
             db.collection('users').where('phone', '==', userPhone).get().then(snapshot => {
+                if(snapshot.empty) {
+                    localStorage.clear();
+                    window.location.href = "index.html";
+                    return;
+                }
                 snapshot.forEach(doc => {
                     userDocId = doc.id;
                     userDataObj = doc.data();
+                    
+                    // അഡ്മിൻ പെൻഡിങ് ഒഴിവാക്കി നേരിട്ട് ആപ്പിലേക്ക് കയറാൻ (Approved ആയാൽ മാത്രം ഡാഷ്‌ബോർഡ്)
+                    if(userDataObj.status !== 'approved') {
+                        db.collection('users').doc(docDocId).update({ status: 'approved' });
+                    }
+
                     userScore = userDataObj.score || 0;
                     document.getElementById('welcome-user').innerText = userDataObj.name;
                     document.getElementById('user-score-display').innerText = `സ്കോർ: ${userScore}`;
@@ -325,7 +342,6 @@
                 });
 
                 if(rawLessonQuestions.length > 0) {
-                    // ചോദ്യങ്ങളെ 10 എണ്ണം വീതമുള്ള ഫേസുകളായി (chunks) തിരിക്കുന്നു
                     let shuffled = shuffleArray([...rawLessonQuestions]);
                     lessonPhases = [];
                     for (let i = 0; i < shuffled.length; i += 10) {
@@ -415,7 +431,7 @@
                         let optBtn = document.createElement('button');
                         optBtn.innerText = opt;
                         optBtn.className = 'menu-btn';
-                        optBtn.style.marginBottom = "5px";
+                        optBtn.style.marginBottom = "6px";
                         optBtn.onclick = () => {
                             clearInterval(timerInterval);
                             
@@ -455,34 +471,30 @@
             resultBox.style.display = 'block';
 
             if (scoreCount === total) {
-                // നോക്കുക: ഇനിയും ഫേസുകൾ ബാക്കിയുണ്ടോ എന്ന് പരിശോധിക്കുന്നു
                 if (currentPhaseIndex + 1 < lessonPhases.length) {
-                    resultBox.innerHTML = `<h3 style="color: #388e3c;">🎉 അഭിനന്ദനങ്ങൾ! ഫേസ് ${currentPhaseIndex + 1} വിജയിച്ചു!</h3>
-                                        <p style="font-size: 16px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
-                                        <button onclick="nextPhase()" style="background:#00796b; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">അടുത്ത ഫേസിലേക്ക് പോവുക (Next Phase)</button>`;
+                    resultBox.innerHTML = `<h3 style="color: #388e3c; font-size: 16px;">🎉 അഭിനന്ദനങ്ങൾ! ഫേസ് ${currentPhaseIndex + 1} വിജയിച്ചു!</h3>
+                                        <p style="font-size: 15px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
+                                        <button onclick="nextPhase()" style="background:#00796b; width:100%; padding:12px; font-size:15px; color:white; border:none; border-radius:6px; cursor:pointer; font-weight: bold;">അടുത്ത ഫേസിലേക്ക് പോവുക (Next Phase)</button>`;
                 } else {
-                    // എല്ലാ ഫേസുകളും കഴിഞ്ഞു, പാഠം പൂർത്തിയായി!
-                    resultBox.innerHTML = `<h3 style="color: #388e3c;">🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം പൂർണ്ണമായി വിജയിച്ചു!</h3>
-                                        <p style="font-size: 18px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
-                                        <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">തുടരുക (Next Lessons)</button>`;
+                    resultBox.innerHTML = `<h3 style="color: #388e3c; font-size: 16px;">🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം പൂർണ്ണമായി വിജയിച്ചു!</h3>
+                                        <p style="font-size: 16px; font-weight: bold;">സ്കോർ: ${scoreCount}/${total} (100%)</p>
+                                        <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; width:100%; padding:12px; font-size:15px; color:white; border:none; border-radius:6px; cursor:pointer; font-weight: bold;">തുടരുക (Next Lessons)</button>`;
                     
                     updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
                 }
             } else {
-                resultBox.innerHTML = `<h3 style="color: #d32f2f;">❌ പരാജയപ്പെട്ടു!</h3>
-                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ.<br>ഈ ഫേസ് പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
-                                    <button onclick="restartQuiz()" style="background:#d32f2f; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer; margin-bottom: 10px;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
-                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; width:100%; padding:12px; font-size:16px; color:white; border:none; border-radius:5px; cursor:pointer;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
+                resultBox.innerHTML = `<h3 style="color: #d32f2f; font-size: 16px;">❌ പരാജയപ്പെട്ടു!</h3>
+                                    <p style="font-size: 14px;">നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ.<br>ഈ ഫേസ് പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
+                                    <button onclick="restartQuiz()" style="background:#d32f2f; width:100%; padding:12px; font-size:15px; color:white; border:none; border-radius:6px; cursor:pointer; margin-bottom: 10px; font-weight: bold;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>
+                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#757575; width:100%; padding:12px; font-size:15px; color:white; border:none; border-radius:6px; cursor:pointer; font-weight: bold;">പാഠങ്ങളുടെ ലിസ്റ്റിലേക്ക് പോവുക</button>`;
             }
         }
 
-        // അടുത്ത ഫേസിലേക്ക് പോകാൻ
         function nextPhase() {
             currentPhaseIndex++;
             prepareQuiz();
         }
 
-        // വീണ്ടും ശ്രമിക്കുമ്പോൾ അതേ ഫേസ് വീണ്ടും വരാൻ
         function restartQuiz() {
             startActualQuiz();
         }
