@@ -82,7 +82,7 @@
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
         </div>
 
-        <!-- 2. സബ് സെക്ഷൻ (ക്ലാസുകൾ / വിഷയങ്ങൾ / പാഠങ്ങൾ) -->
+        <!-- 2. സബ് സെക്ഷൻ -->
         <div id="sub-category-section" style="display: none;">
             <h3 id="sub-title"></h3>
             <div id="sub-items-container" style="max-height: 250px; overflow-y: auto;"></div>
@@ -253,15 +253,18 @@
             });
         }
 
-        // വിഷയം തിരഞ്ഞെടുത്താൽ ആ വിഷയത്തിലെ പാഠങ്ങൾ (Lessons) കാണിക്കുന്നു
         function showLessonsForSubject(subjectName) {
             currentSelectedSubject = subjectName;
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
+            document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('intro-box').style.display = 'none';
+            subSection = document.getElementById('sub-category-section');
+            subSection.style.display = 'block';
+
             subTitle.innerText = `${subjectName} - പാഠങ്ങൾ തിരഞ്ഞെടുക്കുക`;
             container.innerHTML = '<p style="color:#00796b;">പാഠങ്ങൾ പരിശോധിക്കുന്നു...</p>';
 
-            // ആ വിഷയത്തിലുള്ള ആകെ പാഠങ്ങൾ കണ്ടെത്താൻ ചോദ്യങ്ങൾ ഫെച്ച് ചെയ്യുന്നു
             db.collection('questions').where('subject', '==', subjectName).get().then(snapshot => {
                 container.innerHTML = '';
                 let lessonsSet = new Set();
@@ -271,17 +274,12 @@
                 });
 
                 let maxLesson = lessonsSet.size > 0 ? Math.max(...lessonsSet) : 1;
-                // കുറഞ്ഞത് 5 പാഠങ്ങളെങ്കിലും കാണിക്കുകയോ അല്ലെങ്കിൽ ഉള്ളത്രയോ കാണിക്കുക
                 let totalLessons = maxLesson < 5 ? 5 : maxLesson;
-
-                // കുട്ടിയുടെ പ്രോഗ്രസ്സ് എടുക്കുന്നു (ഉദാ: completedLessons['Fiqh'] = 2 എങ്കിൽ Lesson 3 വരെ അൺലോക്ക് ആണ്)
                 let completedLessons = (userDataObj.progress && userDataObj.progress[subjectName]) || 0;
 
                 for (let l = 1; l <= totalLessons; l++) {
                     let btn = document.createElement('button');
                     btn.className = 'menu-btn';
-                    
-                    // പാസ്സ് ആയ പാഠം അല്ലെങ്കിൽ ഒന്നാമത്തെ പാഠം ഓപ്പൺ ആയിരിക്കും, മറ്റുള്ളവ ലോക്ക് ആയിരിക്കും
                     let isUnlocked = (l === 1 || l <= completedLessons + 1);
 
                     if (isUnlocked) {
@@ -452,12 +450,18 @@
                 let currentProgress = userDataObj.progress || {};
                 let highestLessonDone = currentProgress[subject] || 0;
 
-                if(lessonNum > highestLessonDone) {
+                let isNewHigher = lessonNum > highestLessonDone;
+                if(isNewHigher) {
                     currentProgress[subject] = lessonNum;
                 }
 
-                let newTotalScore = userScore + addedScore;
-                userDataObj.score = newTotalScore;
+                // റിവിഷൻ ചെയ്യുമ്പോൾ വീണ്ടും സ്കോർ കൂട്ടാതിരിക്കാൻ പുതിയ പാഠം പാസ്സ് ആയാൽ മാത്രം സ്കോർ കൂട്ടുന്നു
+                let newTotalScore = userScore;
+                if(isNewHigher) {
+                    newTotalScore = userScore + addedScore;
+                    userDataObj.score = newTotalScore;
+                }
+                
                 userDataObj.progress = currentProgress;
 
                 db.collection('users').doc(userDocId).update({
