@@ -4,57 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Academy - Login</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        .icon-select-btn { width: 100%; padding: 12px; background: #fff; border: 2px dashed #00796b; border-radius: 6px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; font-weight: bold; color: #00796b; }
-        
-        /* പോപ്പ്-അപ്പ് മോഡൽ സ്റ്റൈൽ */
-        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 320px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-height: 200px; overflow-y: auto; padding: 10px 0; }
-        .icon-option { font-size: 28px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; text-align: center; }
-        .icon-option:hover { background: #e0f2f1; border-color: #00796b; }
+        body { font-family: sans-serif; background: #eef2f3; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .container { width: 100%; max-width: 420px; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; text-align: center; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 13px; color: #333; }
+        .input-group input { width: 100%; padding: 12px 16px; border-radius: 25px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; outline: none; transition: 0.2s; background: #fafafa; }
+        .input-group input:focus { border-color: #00796b; background: #fff; box-shadow: 0 0 5px rgba(0,121,107,0.2); }
+        .submit-btn { width: 100%; padding: 14px; background-color: #00796b; color: white; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,121,107,0.3); }
+        .submit-btn:hover { background-color: #004d40; }
+        .icon-box { border: 2px dashed #00796b; padding: 12px; border-radius: 20px; margin-bottom: 20px; background: #e0f2f1; cursor: pointer; display: inline-block; font-size: 24px; }
+        @media (max-width: 480px) {
+            .container { padding: 20px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container" style="max-width: 450px; text-align: center;">
+    <div class="container">
+        <h2 style="color: #00796b; margin-top: 0; font-size: 24px;">Smart Academy</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 25px;">ലോഗിൻ / രജിസ്ട്രേഷൻ</p>
         
-        <!-- ആപ്പിന്റെ പേര് ഇംഗ്ലീഷിൽ മാത്രം -->
-        <h2 style="color: #00796b; margin-top: 0;">Smart Academy</h2>
-        <h3 style="color: #555; margin-bottom: 20px;">ലോഗിൻ / രജിസ്ട്രേഷൻ</h3>
-
-        <div style="text-align: left;">
-            <div class="input-group" style="margin-bottom: 12px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;">കുട്ടിയുടെ പേര് (Name)</label>
-                <input type="text" id="user-name" placeholder="പേര് ഇവിടെ എഴുതുക" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-            </div>
-
-            <div class="input-group" style="margin-bottom: 15px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;">മൊബൈൽ നമ്പർ (Mobile Number)</label>
-                <input type="text" id="user-phone" placeholder="നമ്പർ ഇവിടെ നൽകുക" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
-            </div>
-
-            <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; text-align: left;">നിങ്ങളുടെ പ്രൊഫൈൽ ഐക്കൺ തിരഞ്ഞെടുക്കുക:</label>
-            
-            <!-- ഐക്കൺ തിരഞ്ഞെടുക്കാനുള്ള മെയിൻ ബട്ടൺ -->
-            <button type="button" class="icon-select-btn" onclick="openIconModal()">
-                <span id="selected-icon-display" style="font-size: 24px;">⭐</span> 
-                <span id="selected-icon-text">ഐക്കൺ മാറ്റാൻ ഇവിടെ ക്ലിക്ക് ചെയ്യുക</span>
-            </button>
+        <div class="input-group">
+            <label>കുട്ടിയുടെ പേര് (Name):</label>
+            <input type="text" id="user-name" placeholder="പേര് ഇവിടെ എഴുതുക">
         </div>
 
-        <button onclick="handleLogin()" style="width: 100%; background-color: #00796b; color: white; padding: 12px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold;">തുടരുക / രജിസ്റ്റർ ചെയ്യുക</button>
-    </div>
-
-    <!-- പോപ്പ്-അപ്പ് വിൻഡോ (Popup Modal for Icons) -->
-    <div id="icon-modal" class="modal">
-        <div class="modal-content">
-            <h4 style="margin-top: 0; color: #00796b;">നിങ്ങൾക്ക് ഇഷ്ടമുള്ള ഐക്കൺ തിരഞ്ഞെടുക്കുക</h4>
-            <div class="icon-grid" id="icon-grid-container">
-                <!-- ജാവാസ്ക്രിപ്റ്റ് വഴി ഐക്കണുകൾ ഇവിടെ ലോഡ് ആകും -->
-            </div>
-            <button onclick="closeIconModal()" style="margin-top: 15px; background: #d32f2f; color: white; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer;">ക്ലോസ് ചെയ്യുക</button>
+        <div class="input-group">
+            <label>മൊബൈൽ നമ്പർ (Mobile Number):</label>
+            <input type="tel" id="user-phone" placeholder="നമ്പർ ഇവിടെ നൽകുക">
         </div>
+
+        <div style="margin-bottom: 20px; text-align: left;">
+            <label style="font-size: 13px; font-weight: bold; color: #333; display: block; margin-bottom: 6px;">പ്രൊഫൈൽ ഐക്കൺ തിരഞ്ഞെടുക്കുക:</label>
+            <div class="icon-box" onclick="changeIcon()" id="selected-icon-display">⭐</div>
+        </div>
+
+        <button class="submit-btn" onclick="handleLogin()">തുടരുക / രജിസ്റ്റർ ചെയ്യുക</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -73,41 +58,24 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ലഭ്യമായ ഒരുപാട് ഐക്കണുകളുടെ ലിസ്റ്റ് (ഇതുപോലെ എത്ര വേണമെങ്കിലും കൂട്ടാം)
-        const availableIcons = ['⭐', '👦', '👧', '📚', '✏️', '🏆', '💡', '🚀', '🐱', '🐶', '🍎', '⚽', '🎨', '💻', '👑', '🎯', '🦁', '🚗', '🌺', '⚡'];
-        let selectedIcon = '⭐';
-
-        // പേജ് ലോഡ് ചെയ്യുമ്പോൾ ഐക്കണുകൾ ഗ്രീഡിലേക്ക് നിറയ്ക്കുന്നു
-        window.onload = function() {
-            const gridContainer = document.getElementById('icon-grid-container');
-            gridContainer.innerHTML = '';
-            availableIcons.forEach(icon => {
-                let div = document.createElement('div');
-                div.className = 'icon-option';
-                div.innerText = icon;
-                div.onclick = () => selectThisIcon(icon);
-                gridContainer.appendChild(div);
-            });
-        };
-
-        function openIconModal() {
-            document.getElementById('icon-modal').style.display = 'flex';
+        // ഓട്ടോ ലോഗിൻ പരിശോധന: ഫോൺ നമ്പർ നേരത്തെ ഉണ്ടെങ്കിൽ ഡാഷ്‌ബോർഡിലേക്ക് നേരിട്ട് പോകും
+        const savedPhone = localStorage.getItem('userPhone');
+        if (savedPhone) {
+            window.location.href = "dashboard.html";
         }
 
-        function closeIconModal() {
-            document.getElementById('icon-modal').style.display = 'none';
-        }
+        const icons = ['⭐', '🍎', '⚽', '🚀', '📚', '🎨', '🦁', '🏆'];
+        let currentIconIndex = 0;
 
-        function selectThisIcon(icon) {
-            selectedIcon = icon;
-            document.getElementById('selected-icon-display').innerText = icon;
-            document.getElementById('selected-icon-text').innerText = "ഐക്കൺ തിരഞ്ഞെടുത്തിരിക്കുന്നു";
-            closeIconModal();
+        function changeIcon() {
+            currentIconIndex = (currentIconIndex + 1) % icons.length;
+            document.getElementById('selected-icon-display').innerText = icons[currentIconIndex];
         }
 
         function handleLogin() {
             let name = document.getElementById('user-name').value.trim();
             let phone = document.getElementById('user-phone').value.trim();
+            let icon = icons[currentIconIndex];
 
             if (!name || !phone) {
                 alert("ദയവായി പേരും മൊബൈൽ നമ്പറും നൽകുക!");
@@ -115,35 +83,32 @@
             }
 
             db.collection('users').where('phone', '==', phone).get().then(snapshot => {
-                if (snapshot.empty) {
-                    // പുതിയ അക്കൗണ്ട് രജിസ്റ്റർ ചെയ്യുന്നു (Pending Status)
+                if (!snapshot.empty) {
+                    // അക്കൗണ്ട് നിലവിലുണ്ട്, നേരിട്ട് ലോഗിൻ ചെയ്യുന്നു
+                    let docId = snapshot.docs[0].id;
+                    db.collection('users').doc(docId).update({ status: 'approved' }).then(() => {
+                        localStorage.setItem('userPhone', phone);
+                        localStorage.setItem('userName', name);
+                        localStorage.setItem('userIcon', icon);
+                        window.location.href = "dashboard.html";
+                    });
+                } else {
+                    // പുതിയ അക്കൗണ്ട് രജിസ്റ്റർ ചെയ്യുന്നു
                     db.collection('users').add({
                         name: name,
                         phone: phone,
-                        icon: selectedIcon,
                         score: 0,
-                        status: 'pending',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        status: 'approved', // ആദ്യതവണ തന്നെ അപ്പ്രൂവ് ആകുന്നു
+                        progress: {}
                     }).then(() => {
-                        alert("രജിസ്ട്രേഷൻ വിജയകരമായി പൂർത്തിയായി! അഡ്മിൻ അപ്പ്രൂവ് ചെയ്യുന്നതുവരെ കാത്തിരിക്കുക.");
-                    });
-                } else {
-                    // നിലവിലുള്ള അക്കൗണ്ട്
-                    snapshot.forEach(doc => {
-                        let data = doc.data();
-                        localStorage.setItem('userName', data.name);
-                        localStorage.setItem('userPhone', data.phone);
-                        localStorage.setItem('userIcon', data.icon || selectedIcon);
-
-                        if (data.status === 'approved') {
-                            window.location.href = "dashboard.html";
-                        } else {
-                            alert("നിങ്ങളുടെ അക്കൗണ്ട് അഡ്മിൻ ഇതുവരെ അപ്പ്രൂവ് ചെയ്തിട്ടില്ല!");
-                        }
+                        localStorage.setItem('userPhone', phone);
+                        localStorage.setItem('userName', name);
+                        localStorage.setItem('userIcon', icon);
+                        window.location.href = "dashboard.html";
+                    }).catch(err => {
+                        alert("എറർ സംഭവിച്ചു: " + err);
                     });
                 }
-            }).catch(err => {
-                alert("ലോഗിൻ ചെയ്യുന്നതിൽ പിഴവ്: " + err.message);
             });
         }
     </script>
