@@ -16,10 +16,16 @@
         .row-group .input-group { flex: 1; }
         .question-card { background: #fff; padding: 12px; border: 1px solid #ddd; margin-bottom: 10px; border-radius: 6px; font-size: 14px; }
         .action-btn { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; border-radius: 4px; color: white; margin-right: 5px; }
+        
         .stat-box { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .stat-card { background: #e0f2f1; padding: 15px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center; border: 1px solid #b2dfdb; }
+        .stat-card { background: #e0f2f1; padding: 15px; border-radius: 8px; flex: 1; min-width: 150px; text-align: center; border: 1px solid #b2dfdb; cursor: pointer; transition: 0.2s; }
+        .stat-card:hover { background: #b2dfdb; }
         .stat-card h4 { margin: 0; color: #00796b; font-size: 14px; }
         .stat-card p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #004d40; }
+
+        /* ഡീറ്റെയിൽസ് കാണാനുള്ള മോഡൽ സ്റ്റൈൽ */
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 400px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto; }
         @media (max-width: 600px) { .row-group { flex-direction: column; gap: 0; } }
     </style>
 </head>
@@ -37,13 +43,13 @@
         <!-- അഡ്മിൻ ഡാഷ്‌ബോർഡ് -->
         <div id="admin-dashboard" style="display: none;">
             
-            <!-- സ്റ്റാറ്റിസ്റ്റിക്സ് ബോർഡ് (ആകെ ചോദ്യങ്ങളുടെ കണക്കുകൾ) -->
+            <!-- സ്റ്റാറ്റിസ്റ്റിക്സ് ബോർഡ് (ക്ലിക്ക് ചെയ്താൽ കണക്കുകൾ കാണാം) -->
             <div class="stat-box">
-                <div class="stat-card">
-                    <h4>ആകെ ചോദ്യങ്ങൾ</h4>
+                <div class="stat-card" onclick="openStatsModal()">
+                    <h4>ആകെ ചോദ്യങ്ങൾ (വിശദമായി കാണാൻ ക്ലിക്ക് ചെയ്യുക)</h4>
                     <p id="total-q-count">0</p>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" style="cursor: default;">
                     <h4>പെൻഡിങ് അക്കൗണ്ടുകൾ</h4>
                     <p id="pending-count">0</p>
                 </div>
@@ -112,7 +118,7 @@
                     <label>Google Sheet CSV Link:</label>
                     <input type="text" id="csv-link" placeholder="https://docs.google.com/spreadsheets/.../pub?output=csv">
                 </div>
-                <button onclick="importQuestionsFromCSV()" style="background-color: #388e3c; padding: 10px 20px; color:white; border:none; border-radius:5px; cursor:pointer;">ചോദ്യങ്ങൾ ഇമ്പോർട്ട് ചെയ്യുക</button>
+                <button onclick="importQuestionsFromCSV()" style="background-color: #388e3c; padding: 10px 20px; color:white; border:none; border-radius:5px; cursor:pointer;">ചോദ്യങ്ങളുടെ ലിങ്ക് ഇമ്പോർട്ട് ചെയ്യുക</button>
             </div>
 
             <!-- 2. മാന്വലായി ചോദ്യം ചേർക്കാൻ / എഡിറ്റ് ചെയ്യാൻ -->
@@ -200,6 +206,17 @@
         </div>
     </div>
 
+    <!-- സ്റ്റാറ്റിസ്റ്റിക്സ് കാണിക്കുന്ന പോപ്പ്-അപ്പ് മോഡൽ -->
+    <div id="stats-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; color: #00796b;">📊 വിശദമായ ചോദ്യങ്ങളുടെ കണക്കുകൾ</h3>
+            <div id="stats-details-body" style="font-size: 14px; line-height: 1.6;">
+                ലോഡ് ചെയ്യുന്നു...
+            </div>
+            <button onclick="closeStatsModal()" style="margin-top: 15px; background: #d32f2f; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%;">ക്ലോസ് ചെയ്യുക</button>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script>
@@ -215,6 +232,8 @@
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        let allQuestionsCache = [];
 
         function loginAdmin() {
             let user = document.getElementById('admin-user').value.trim();
@@ -232,11 +251,59 @@
             }
         }
 
-        // ആകെ ചോദ്യങ്ങളുടെയും പെൻഡിങ് യൂസേഴ്സിന്റെയും കൗണ്ട് കാണിക്കാൻ
+        // ആകെ ചോദ്യങ്ങളുടെ കൗണ്ടും കാച്ചെയും എടുക്കാൻ
         function loadDashboardStats() {
             db.collection('questions').get().then(snap => {
                 document.getElementById('total-q-count').innerText = snap.size;
+                allQuestionsCache = [];
+                snap.forEach(doc => {
+                    allQuestionsCache.push(doc.data());
+                });
             });
+        }
+
+        function openStatsModal() {
+            document.getElementById('stats-modal').style.display = 'flex';
+            let body = document.getElementById('stats-details-body');
+            
+            let madrasaTotal = 0, schoolTotal = 0, gkTotal = 0;
+            let breakdownHTML = "";
+
+            // സെക്ഷൻ തിരിച്ച് കണക്കാക്കുന്നു
+            let madrasaClasses = {};
+            let schoolClasses = {};
+
+            allQuestionsCache.forEach(q => {
+                let sec = q.section || '';
+                if(sec.startsWith('madrasa')) {
+                    madrasaTotal++;
+                    let cls = sec.replace('madrasa_', 'ക്ലാസ്സ് ');
+                    madrasaClasses[cls] = (madrasaClasses[cls] || 0) + 1;
+                } else if(sec.startsWith('school')) {
+                    schoolTotal++;
+                    let cls = sec.replace('school_', 'ക്ലാസ്സ് ');
+                    schoolClasses[cls] = (schoolClasses[cls] || 0) + 1;
+                } else if(sec === 'gk') {
+                    gkTotal++;
+                }
+            });
+
+            breakhtml = `<b>📖 മദ്രസ ആകെ:</b> ${madrasaTotal} ചോദ്യങ്ങൾ<br>`;
+            for(let c in madrasaClasses) {
+                breakhtml += `&nbsp;&nbsp;&bull; ${c}: ${madrasaClasses[c]} ചോദ്യങ്ങൾ<br>`;
+            }
+            breakhtml += `<br><b>🏫 സ്കൂൾ ആകെ:</b> ${schoolTotal} ചോദ്യങ്ങൾ<br>`;
+            for(let c in schoolClasses) {
+                breakhtml += `&nbsp;&nbsp;&bull; ${c}: ${schoolClasses[c]} ചോദ്യങ്ങൾ<br>`;
+            }
+            breakhtml += `<br><b>🌍 GK & Current Affairs:</b> ${gkTotal} ചോദ്യങ്ങൾ<br>`;
+            breakhtml += `<hr><b>ആകെ മൊത്തം ചോദ്യങ്ങൾ:</b> ${allQuestionsCache.length}`;
+
+            body.innerHTML = breakhtml;
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').style.display = 'none';
         }
 
         function loadPendingUsersLive() {
@@ -332,7 +399,6 @@
             return row.Correct_Answer;
         }
 
-        // റാൻഡം ചോദ്യ കോഡ് ജനറേറ്റ് ചെയ്യാൻ (ഉദാ: Q-7A2F)
         function generateQCode() {
             let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let code = 'Q-';
@@ -371,7 +437,7 @@
                             };
                             let newDocRef = db.collection('questions').doc();
                             batch.set(newDocRef, {
-                                qCode: generateQCode(), // യുണീക്ക് കോഡ് അഡ് ചെയ്യപ്പെടുന്നു
+                                qCode: generateQCode(),
                                 section: sectionKey,
                                 subject: subjectName,
                                 Question: qObj.Question,
@@ -418,10 +484,10 @@
             if(docId) {
                 db.collection('questions').doc(docId).update({
                     subject, Question, Option_A, Option_B, Option_C, Option_D, answerText
-                }).then(() => { alert("ചോദ്യം അപ്ഡേറ്റ് ചെയ്തു!"); resetForm(); });
+                }).then(() => { alert("ചോദ്യം അപ്ഡേറ്റ് ചെയ്തു!"); resetForm(); loadDashboardStats(); });
             } else {
                 db.collection('questions').add({
-                    qCode: generateQCode(), // പുതിയ ചോദ്യത്തിന് കോഡ് ജനറേറ്റ് ചെയ്യുന്നു
+                    qCode: generateQCode(),
                     section: sectionKey,
                     subject, Question, Option_A, Option_B, Option_C, Option_D, answerText
                 }).then(() => { 
