@@ -10,6 +10,7 @@
         .back-btn { width: auto !important; padding: 6px 15px !important; font-size: 14px !important; background-color: #757575 !important; margin-top: 15px; margin-right: 5px; }
         .menu-btn { width: 100%; padding: 14px; background-color: #00796b; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; text-align: left; margin-bottom: 10px; font-weight: bold; }
         .menu-btn:hover { background-color: #004d40; }
+        .menu-btn.locked { background-color: #bdbdbd !important; cursor: not-allowed; }
         .user-profile { background: #e0f2f1; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         
         .timer-container { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
@@ -43,7 +44,7 @@
             </div>
         </div>
 
-        <!-- പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുന്ന ബോക്സ് -->
+        <!-- പ്രൊഫൈൽ എഡിറ്റ് ബോക്സ് -->
         <div id="edit-profile-box" style="display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; text-align: left;">
             <h4 style="margin-top: 0; color: #00796b;">പ്രൊഫൈൽ വിവരങ്ങൾ മാറ്റുക</h4>
             <label style="font-size: 13px; font-weight: bold;">പുതിയ പേര്:</label>
@@ -81,7 +82,7 @@
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
         </div>
 
-        <!-- 2. സബ് സെക്ഷൻ (ക്ലാസുകൾ അല്ലെങ്കിൽ വിഷയങ്ങൾ) -->
+        <!-- 2. സബ് സെക്ഷൻ (ക്ലാസുകൾ / വിഷയങ്ങൾ / പാഠങ്ങൾ) -->
         <div id="sub-category-section" style="display: none;">
             <h3 id="sub-title"></h3>
             <div id="sub-items-container" style="max-height: 250px; overflow-y: auto;"></div>
@@ -92,7 +93,7 @@
         <!-- 3. പഠനം തുടങ്ങാനുള്ള നിർദ്ദേശം -->
         <div id="intro-box" style="display: none; text-align: center;">
             <h3 id="intro-title">ക്വിസ്</h3>
-            <p>ഈ സെക്ഷനിലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ വിജയിക്കൂ!</p>
+            <p>ഈ പാഠത്തിലെ ചോദ്യങ്ങൾക്കും 100% ശരിയായ ഉത്തരം നൽകിയാൽ മാത്രമേ അടുത്ത പാഠം അൺലോക്ക് ആകൂ!</p>
             <button onclick="startActualQuiz()" style="background-color: #0288d1; padding: 12px; font-size: 16px; border:none; color:white; border-radius:5px; cursor:pointer;">പഠനം തുടങ്ങുക (Start Quiz)</button>
             <br>
             <button onclick="goBackToMain()" class="back-btn">പിന്നോട്ട് (Back)</button>
@@ -141,6 +142,8 @@
         let userScore = 0;
         let activeQuestions = [];
         let userDocId = "";
+        let userDataObj = {};
+        let currentSelectedSubject = "";
 
         if (!userPhone) window.location.href = "index.html";
         else {
@@ -152,11 +155,11 @@
             db.collection('users').where('phone', '==', userPhone).get().then(snapshot => {
                 snapshot.forEach(doc => {
                     userDocId = doc.id;
-                    let data = doc.data();
-                    userScore = data.score || 0;
-                    document.getElementById('welcome-user').innerText = data.name;
+                    userDataObj = doc.data();
+                    userScore = userDataObj.score || 0;
+                    document.getElementById('welcome-user').innerText = userDataObj.name;
                     document.getElementById('user-score-display').innerText = `സ്കോർ: ${userScore}`;
-                    localStorage.setItem('userName', data.name);
+                    localStorage.setItem('userName', userDataObj.name);
                 });
             });
         }
@@ -212,7 +215,7 @@
                             let btn = document.createElement('button');
                             btn.className = 'menu-btn';
                             btn.innerText = subj;
-                            btn.onclick = () => loadQuestionsFromDb('gk', subj);
+                            btn.onclick = () => showLessonsForSubject(subj);
                             container.appendChild(btn);
                         });
                     } else {
@@ -231,7 +234,6 @@
             container.innerHTML = '<p style="color:#00796b;">ലോഡ് ചെയ്യുന്നു...</p>';
 
             let docKey = category + '_class_' + classNum;
-            let sectionKey = category + '_' + classNum;
 
             db.collection('settings').doc(docKey).get().then(doc => {
                 container.innerHTML = '';
@@ -240,7 +242,7 @@
                         let btn = document.createElement('button');
                         btn.className = 'menu-btn';
                         btn.innerText = subj;
-                        btn.onclick = () => loadQuestionsFromDb(sectionKey, subj);
+                        btn.onclick = () => showLessonsForSubject(subj);
                         container.appendChild(btn);
                     });
                 } else {
@@ -251,56 +253,57 @@
             });
         }
 
-        function showLeaderboard() {
-            document.getElementById('main-category-section').style.display = 'none';
-            document.getElementById('leaderboard-section').style.display = 'block';
-            let tbody = document.getElementById('leaderboard-body');
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">ലോഡ് ചെയ്യുന്നു...</td></tr>';
+        // വിഷയം തിരഞ്ഞെടുത്താൽ ആ വിഷയത്തിലെ പാഠങ്ങൾ (Lessons) കാണിക്കുന്നു
+        function showLessonsForSubject(subjectName) {
+            currentSelectedSubject = subjectName;
+            const subTitle = document.getElementById('sub-title');
+            const container = document.getElementById('sub-items-container');
+            subTitle.innerText = `${subjectName} - പാഠങ്ങൾ തിരഞ്ഞെടുക്കുക`;
+            container.innerHTML = '<p style="color:#00796b;">പാഠങ്ങൾ പരിശോധിക്കുന്നു...</p>';
 
-            db.collection('users').where('status', '==', 'approved').get().then(snapshot => {
-                tbody.innerHTML = '';
-                let usersList = [];
+            // ആ വിഷയത്തിലുള്ള ആകെ പാഠങ്ങൾ കണ്ടെത്താൻ ചോദ്യങ്ങൾ ഫെച്ച് ചെയ്യുന്നു
+            db.collection('questions').where('subject', '==', subjectName).get().then(snapshot => {
+                container.innerHTML = '';
+                let lessonsSet = new Set();
                 snapshot.forEach(doc => {
-                    usersList.push(doc.data());
+                    let d = doc.data();
+                    lessonsSet.add(d.lesson || 1);
                 });
 
-                // സ്കോർ അനുസരിച്ച് വലുതിൽ നിന്ന് ചെറുതിലേക്ക് (Descending) സോർട്ട് ചെയ്യുന്നു
-                usersList.sort((a, b) => (b.score || 0) - (a.score || 0));
+                let maxLesson = lessonsSet.size > 0 ? Math.max(...lessonsSet) : 1;
+                // കുറഞ്ഞത് 5 പാഠങ്ങളെങ്കിലും കാണിക്കുകയോ അല്ലെങ്കിൽ ഉള്ളത്രയോ കാണിക്കുക
+                let totalLessons = maxLesson < 5 ? 5 : maxLesson;
 
-                let rank = 1;
-                if(usersList.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">വിവരങ്ങൾ ലഭ്യമല്ല.</td></tr>';
-                    return;
+                // കുട്ടിയുടെ പ്രോഗ്രസ്സ് എടുക്കുന്നു (ഉദാ: completedLessons['Fiqh'] = 2 എങ്കിൽ Lesson 3 വരെ അൺലോക്ക് ആണ്)
+                let completedLessons = (userDataObj.progress && userDataObj.progress[subjectName]) || 0;
+
+                for (let l = 1; l <= totalLessons; l++) {
+                    let btn = document.createElement('button');
+                    btn.className = 'menu-btn';
+                    
+                    // പാസ്സ് ആയ പാഠം അല്ലെങ്കിൽ ഒന്നാമത്തെ പാഠം ഓപ്പൺ ആയിരിക്കും, മറ്റുള്ളവ ലോക്ക് ആയിരിക്കും
+                    let isUnlocked = (l === 1 || l <= completedLessons + 1);
+
+                    if (isUnlocked) {
+                        btn.innerText = `📖 പാഠം (Lesson) ${l} ${l <= completedLessons ? '✅ (വിജയിച്ചു)' : ''}`;
+                        btn.onclick = () => loadQuestionsForLesson(subjectName, l);
+                    } else {
+                        btn.className += ' locked';
+                        btn.innerText = `🔒 പാഠം (Lesson) ${l} (ലോക്ക് ചെയ്തിരിക്കുന്നു)`;
+                        btn.onclick = () => alert("മുൻപത്തെ പാഠം പൂർത്തിയാക്കിയാൽ മാത്രമേ ഇത് അൺലോക്ക് ആവുകയുള്ളൂ!");
+                    }
+                    container.appendChild(btn);
                 }
-
-                usersList.slice(0, 10).forEach(d => {
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `<td><b>#${rank}</b></td><td>${d.name}</td><td><b>${d.score || 0}</b></td>`;
-                    tbody.appendChild(tr);
-                    rank++;
-                });
-            }).catch(err => {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color:red;">ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്.</td></tr>';
             });
         }
 
-        function goBackToMain() {
-            document.getElementById('sub-category-section').style.display = 'none';
-            document.getElementById('intro-box').style.display = 'none';
-            document.getElementById('quiz-box').style.display = 'none';
-            document.getElementById('leaderboard-section').style.display = 'none';
-            document.getElementById('edit-profile-box').style.display = 'none';
-            document.getElementById('main-category-section').style.display = 'block';
-            clearInterval(timerInterval);
-        }
-
-        function loadQuestionsFromDb(sectionKey, subjectName) {
+        function loadQuestionsForLesson(subjectName, lessonNo) {
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('sub-items-container');
-            subTitle.innerText = `${subjectName} - ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നു...`;
+            subTitle.innerText = `${subjectName} - പാഠം ${lessonNo} - ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നു...`;
             container.innerHTML = '<p style="color:#00796b;">ദയവായി കാത്തിരിക്കുക...</p>';
 
-            db.collection('questions').where('subject', '==', subjectName).get().then(snapshot => {
+            db.collection('questions').where('subject', '==', subjectName).where('lesson', '==', lessonNo).get().then(snapshot => {
                 let questionsList = [];
                 snapshot.forEach(doc => {
                     let row = doc.data();
@@ -312,14 +315,24 @@
                 });
 
                 if(questionsList.length > 0) {
-                    prepareQuiz(subjectName, questionsList);
+                    prepareQuiz(`${subjectName} - പാഠം ${lessonNo}`, questionsList, lessonNo);
                 } else {
-                    alert("ഈ വിഷയത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
-                    goBackToMain();
+                    alert("ഈ പാഠത്തിൽ ചോദ്യങ്ങൾ ലഭ്യമല്ല!");
+                    showLessonsForSubject(subjectName);
                 }
             }).catch(err => {
                 alert("ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്!");
             });
+        }
+
+        let currentActiveLesson = 1;
+
+        function prepareQuiz(title, qList, lessonNo) {
+            currentActiveLesson = lessonNo;
+            document.getElementById('sub-category-section').style.display = 'none';
+            document.getElementById('intro-box').style.display = 'block';
+            document.getElementById('intro-title').innerText = title;
+            activeQuestions = shuffleArray([...qList]);
         }
 
         function shuffleArray(array) {
@@ -330,13 +343,6 @@
                 [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
             }
             return array;
-        }
-
-        function prepareQuiz(title, qList) {
-            document.getElementById('sub-category-section').style.display = 'none';
-            document.getElementById('intro-box').style.display = 'block';
-            document.getElementById('intro-title').innerText = title;
-            activeQuestions = shuffleArray([...qList]);
         }
 
         let timerInterval;
@@ -429,21 +435,80 @@
             const quizBox = document.getElementById('quiz-box');
 
             if (scoreCount === total) {
-                quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ വിജയിച്ചു!</h3>
+                quizBox.innerHTML = `<h3>🎉 അഭിനന്ദനങ്ങൾ! നിങ്ങൾ ഈ പാഠം വിജയിച്ചു!</h3>
                                     <p>സ്കോർ: ${scoreCount}/${total} (100%)</p>
-                                    <button onclick="location.reload()" style="background:#00796b; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">മറ്റ് വിഭാഗങ്ങളിലേക്ക് പോവുക</button>`;
-                updateScoreToDatabase(scoreCount * 5);
+                                    <button onclick="showLessonsForSubject('${currentSelectedSubject}')" style="background:#00796b; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">തുടരുക (Next Lessons)</button>`;
+                
+                updateProgressAndScore(currentSelectedSubject, currentActiveLesson, scoreCount * 5);
             } else {
                 quizBox.innerHTML = `<h3>❌ പരാജയപ്പെട്ടു!</h3>
-                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. വിജയിക്കാൻ 100% (എല്ലാ ചോദ്യങ്ങളും) ശരിയായിരിക്കണം.</p>
-                                    <button onclick="location.reload()" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
+                                    <p>നിങ്ങൾക്ക് ${scoreCount}/${total} (${percentage}%) മാത്രമേ ലഭിച്ചുള്ളൂ. ഈ പാഠം പാസ്സ് ആകാൻ 100% ശരിയായിരിക്കണം.</p>
+                                    <button onclick="loadQuestionsForLesson('${currentSelectedSubject}', ${currentActiveLesson})" style="background:#d32f2f; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">വീണ്ടും ശ്രമിക്കുക (Try Again)</button>`;
             }
         }
 
-        async function updateScoreToDatabase(addedScore) {
+        async function updateProgressAndScore(subject, lessonNum, addedScore) {
             if(userDocId) {
-                db.collection('users').doc(userDocId).update({ score: (userScore + addedScore) });
+                let currentProgress = userDataObj.progress || {};
+                let highestLessonDone = currentProgress[subject] || 0;
+
+                if(lessonNum > highestLessonDone) {
+                    currentProgress[subject] = lessonNum;
+                }
+
+                let newTotalScore = userScore + addedScore;
+                userDataObj.score = newTotalScore;
+                userDataObj.progress = currentProgress;
+
+                db.collection('users').doc(userDocId).update({
+                    score: newTotalScore,
+                    progress: currentProgress
+                }).then(() => {
+                    fetchUserData();
+                });
             }
+        }
+
+        function showLeaderboard() {
+            document.getElementById('main-category-section').style.display = 'none';
+            document.getElementById('leaderboard-section').style.display = 'block';
+            let tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">ലോഡ് ചെയ്യുന്നു...</td></tr>';
+
+            db.collection('users').where('status', '==', 'approved').get().then(snapshot => {
+                tbody.innerHTML = '';
+                let usersList = [];
+                snapshot.forEach(doc => {
+                    usersList.push(doc.data());
+                });
+
+                usersList.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+                let rank = 1;
+                if(usersList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">വിവരങ്ങൾ ലഭ്യമല്ല.</td></tr>';
+                    return;
+                }
+
+                usersList.slice(0, 10).forEach(d => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `<td><b>#${rank}</b></td><td>${d.name}</td><td><b>${d.score || 0}</b></td>`;
+                    tbody.appendChild(tr);
+                    rank++;
+                });
+            }).catch(err => {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color:red;">ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്.</td></tr>';
+            });
+        }
+
+        function goBackToMain() {
+            document.getElementById('sub-category-section').style.display = 'none';
+            document.getElementById('intro-box').style.display = 'none';
+            document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('leaderboard-section').style.display = 'none';
+            document.getElementById('edit-profile-box').style.display = 'none';
+            document.getElementById('main-category-section').style.display = 'block';
+            clearInterval(timerInterval);
         }
 
         function logout() {
