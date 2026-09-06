@@ -257,15 +257,23 @@
             let tbody = document.getElementById('leaderboard-body');
             tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">ലോഡ് ചെയ്യുന്നു...</td></tr>';
 
-            db.collection('users').where('status', '==', 'approved').orderBy('score', 'desc').limit(10).get().then(snapshot => {
+            db.collection('users').where('status', '==', 'approved').get().then(snapshot => {
                 tbody.innerHTML = '';
+                let usersList = [];
+                snapshot.forEach(doc => {
+                    usersList.push(doc.data());
+                });
+
+                // സ്കോർ അനുസരിച്ച് വലുതിൽ നിന്ന് ചെറുതിലേക്ക് (Descending) സോർട്ട് ചെയ്യുന്നു
+                usersList.sort((a, b) => (b.score || 0) - (a.score || 0));
+
                 let rank = 1;
-                if(snapshot.empty) {
+                if(usersList.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">വിവരങ്ങൾ ലഭ്യമല്ല.</td></tr>';
                     return;
                 }
-                snapshot.forEach(doc => {
-                    let d = doc.data();
+
+                usersList.slice(0, 10).forEach(d => {
                     let tr = document.createElement('tr');
                     tr.innerHTML = `<td><b>#${rank}</b></td><td>${d.name}</td><td><b>${d.score || 0}</b></td>`;
                     tbody.appendChild(tr);
